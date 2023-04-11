@@ -1,13 +1,12 @@
 package kleinprojekt;
 
 import java.io.File;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -23,11 +22,9 @@ public class PrimaryController {
 	private String activeTab = "encrypt";
 	private int maxFileSize = 2 * (1024 * 1024);
 	private String regex = new Regex().regex4();
-	private boolean encrypted = false;
-	private boolean decrypted = false;
+	private Alert alert;
 	private String inputFile = null;
 	private List<File> files = null;
-	private File file = null;
 	private String[] ciphers = { "AES", "RSA", "Salt", "Salt and Pepper" };
 	
 	@FXML
@@ -35,6 +32,9 @@ public class PrimaryController {
 	
 	@FXML
 	private Button EnDecrypbtn;
+	
+	@FXML
+	private Button Downloadbtn;
 	
 	@FXML
 	private Button encryptbtn;
@@ -55,11 +55,11 @@ public class PrimaryController {
     void initialize() throws Exception { 
 		encryptbtn.setStyle("-fx-background-color: #ffd866; -fx-font-weight: bold;");
 		encryptbtn.setUnderline(true);
-		decrypted = false;
-		encrypted = true;
+		activeTab = "encrypted";
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
 		CbCipher.getItems().addAll(ciphers);
-    }
+		alert = new Alert(AlertType.NONE);
+	}
 	
 	@FXML
 	void decrypt(ActionEvent event) {
@@ -69,8 +69,7 @@ public class PrimaryController {
 		decryptbtn.setUnderline(true);
 		EnDecrypbtn.setText("Decrypt");
 		FilesEncryptDecryptSurface.setText("File to decrypt");
-		decrypted = true;
-		encrypted = false;
+		activeTab = "decrypted";
 	}
 
 	@FXML
@@ -81,8 +80,7 @@ public class PrimaryController {
 		decryptbtn.setUnderline(false);
 		EnDecrypbtn.setText("Encrypt");
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
-		decrypted = false;
-		encrypted = true;
+		activeTab = "encrypted";
 	}
 	
 	@FXML
@@ -92,20 +90,48 @@ public class PrimaryController {
 	
 	@FXML
 	private void handleDrop(DragEvent event) {
-		if (encrypted && !decrypted) {
+		if (activeTab.equals("encrypted")) {
 			files = event.getDragboard().getFiles();
-			if (files.isEmpty()) System.out.println("Error No Files fetched");
-			else FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
-		} else if (!encrypted && decrypted){
-			List<String> validExtension = Arrays.asList("encrypted");
-			file = null;
-			System.out.println(event.getDragboard().getFiles().stream().map(f -> getExtension(f.getName())).collect(Collectors.toList()));
-			if (event.getDragboard().getFiles().stream().map(f -> getExtension(f.getName())).collect(Collectors.toList()).toString() == "[encrypted]") {
-				file = (File) event.getDragboard().getFiles();
-				FilesEncryptDecryptSurface.setText("File to Decrypt ✅");
-				System.out.println(file.getName());
+			if (files.isEmpty()) {
+				alert.setAlertType(AlertType.ERROR);
+				alert.setContentText("No Files fetched!");
+				alert.show();
+				//System.out.println("Error No Files fetched!");
+				return;
 			}
-			else System.out.println("Error No File fetched");
+			else {
+				for (File f : files) System.out.println(f.getName());
+				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
+			}
+		} else if (activeTab.equals("decrypted")){
+			files = event.getDragboard().getFiles();
+			if (files.isEmpty()) {
+				alert.setAlertType(AlertType.ERROR);
+				alert.setContentText("No File fetched!");
+				alert.show();
+				//System.out.println("No File fetched!");
+			}else if (files.size() != 1) {
+				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Please select one File to decrypt!");
+				alert.show();
+				//System.out.println("Please select one File to decrypt!");
+				return;
+			} else if (files.get(0).length() > maxFileSize) {
+				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Large file sizes might crash the application \nPlease select smaller files.");
+				alert.show();
+				//System.out.println("Large file sizes might crash the application \nPlease select smaller files.");
+				return;
+			} else if (files.get(0).getName().indexOf(".encrypted") == -1) {
+				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Please select an encrypted File");
+				alert.show();
+				//System.out.println("Please select an encrypted File");
+				return;
+			} else {
+				for (File f : files) System.out.println(f.getName());
+				FilesEncryptDecryptSurface.setText("File to Decrypt ✅");		
+			}
 		}
 	}
 	
@@ -121,31 +147,54 @@ public class PrimaryController {
 	
 	@FXML
 	private void handlePressed(MouseEvent event) {
-		System.out.println("Pressed Label");
 		FileChooser fChooser = new FileChooser();
-		if (decrypted && !encrypted) {
+		if (activeTab.equals("decrypted")) {
 			FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("ENCRYPTED File (*.encrypted)", "*.encrypted");
 			fChooser.getExtensionFilters().add(extFilter);
-			File selectedFile = fChooser.showOpenDialog(null);
-			if (selectedFile == null) System.out.println("Error No File fetched");
+			files = fChooser.showOpenMultipleDialog(null);
+			if (files.isEmpty()) {
+				alert.setAlertType(AlertType.ERROR);
+				alert.setContentText("No File fetched!");
+				alert.show();
+				return;
+				//System.out.println("Error No File fetched!");
+			}
+			else if (files.get(0).length() > maxFileSize) {
+				alert.setAlertType(AlertType.WARNING);
+			}
 			else FilesEncryptDecryptSurface.setText("File to Decrypt ✅");
-		} else if (encrypted && !decrypted) {
-			List<File> files = fChooser.showOpenMultipleDialog(null);
-			if (files.isEmpty()) System.out.println("Error No File fetched");
-			else FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
+		} else if (activeTab.equals("encrypted")) {
+			files = fChooser.showOpenMultipleDialog(null);
+			if (files.isEmpty()) {
+				alert.setAlertType(AlertType.ERROR);
+				alert.setContentText("No File fetched!");
+				alert.show();
+				//System.out.println("Error No File fetched!");
+			}
+			else {
+				for (File f : files) System.out.println(f.getName());
+				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
+			}
 		}
-	}
-	
-	private String getExtension(String fileName) {
-		int i = fileName.lastIndexOf('.');
-		if (i > 0 && i < fileName.length() -1) return fileName.substring(i + 1).toLowerCase();
-		else return "";
 	}
 	
 	private void disableAll() {
 		EnDecrypbtn.setDisable(true);
-		if (decrypted && !encrypted) EnDecrypbtn.setText("Decrypt");
+		if (activeTab.equals("decrypted")) EnDecrypbtn.setText("Decrypt");
 		else EnDecrypbtn.setText("Encrypt");
+	}
+	
+	private void passwordInputChange() {
+		String pwInput = tfPassword.getText();
+		
+	}
+	
+	private boolean checkValidPassword(String pw) {
+		return (!isEmpty(pw) && pw.matches(regex));
+	}
+	
+	private void generatePassword() {
+		tfPassword.setText("");
 	}
 	
 	private void disableDownload() {
@@ -163,7 +212,7 @@ public class PrimaryController {
 	private boolean isEmpty(String str) {
 		if (str.trim().length() == 0) return true;
 		else return false;
-	}
+	}	
 	
 	private void toggleNavItemDisabled() {
 		

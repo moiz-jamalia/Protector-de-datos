@@ -62,6 +62,17 @@
                         <Insets />
                      </HBox.margin>
                      </Button>
+                     <Button fx:id="Downloadbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" depthTest="DISABLE" graphicTextGap="8.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: green; -fx-background-color: tranparent;" text="Download" textAlignment="RIGHT" textFill="GREEN" textOverrun="LEADING_ELLIPSIS">
+                     <opaqueInsets>
+                        <Insets />
+                     </opaqueInsets>
+                     <padding>
+                        <Insets right="50.0" />
+                     </padding>
+                     <HBox.margin>
+                        <Insets />
+                     </HBox.margin>
+                     </Button>
              	  </children>
              	  <VBox.margin>
                  	 <Insets />
