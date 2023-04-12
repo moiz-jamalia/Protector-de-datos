@@ -26,7 +26,12 @@
                   <VBox alignment="CENTER" prefHeight="590.0" prefWidth="200.0">
                      <children>
                         <Label fx:id="FilesEncryptDecryptSurface" alignment="CENTER" contentDisplay="CENTER" onDragDropped="#handleDrop" onDragOver="#handleDragOver" onMouseEntered="#handleHover" onMouseExited="#handleExited" onMousePressed="#handlePressed" prefHeight="30.0" prefWidth="200.0" style="-fx-border-color: #f1bc31;" text="File/s to encrypt" textFill="#f1bc31" />
-                        <TextField fx:id="tfPassword" prefHeight="27.0" prefWidth="165.0" promptText="Your Password..." style="-fx-background-color: transparent; -fx-border-color: white;" />
+                        <Pane prefHeight="29.0" prefWidth="200.0">
+                           <children>
+                              <TextField fx:id="tfPassword" prefHeight="30.0" prefWidth="165.0" promptText="Your Password..." style="-fx-background-color: transparent; -fx-border-color: white; -fx-text-fill: white;" />
+                              <Button fx:id="createPasswordbtn" layoutX="165.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="35.0" style="-fx-background-color: transparent; -fx-border-color: #f1bc31;" textFill="#f1bc31" />
+                           </children>
+                        </Pane>
                      </children></VBox>
                   <VBox alignment="CENTER" prefHeight="590.0" prefWidth="225.0">
                      <children>
@@ -38,7 +43,7 @@
                               <Font name="System Bold" size="18.0" />
                            </font>
                         </Label>
-                        <ComboBox fx:id="CbCipher" blendMode="LIGHTEN" prefHeight="25.0" prefWidth="115.0" style="-fx-background-color: tranparent; -fx-border-color: blue;">
+                        <ComboBox fx:id="CbCipher" blendMode="LIGHTEN" depthTest="DISABLE" prefHeight="25.0" prefWidth="115.0" style="-fx-background-color: tranparent; -fx-border-color: blue;">
                            <padding>
                               <Insets left="50.0" />
                            </padding>
@@ -51,28 +56,26 @@
                         <Insets bottom="50.0" />
                      </opaqueInsets>
                   </VBox>
-                  <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" depthTest="DISABLE" graphicTextGap="8.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red; -fx-background-color: tranparent;" text="Encrypt" textAlignment="RIGHT" textFill="RED" textOverrun="LEADING_ELLIPSIS">
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets right="50.0" />
-                     </padding>
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                     </Button>
-                     <Button fx:id="Downloadbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" depthTest="DISABLE" graphicTextGap="8.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: green; -fx-background-color: tranparent;" text="Download" textAlignment="RIGHT" textFill="GREEN" textOverrun="LEADING_ELLIPSIS">
-                     <opaqueInsets>
-                        <Insets />
-                     </opaqueInsets>
-                     <padding>
-                        <Insets right="50.0" />
-                     </padding>
-                     <HBox.margin>
-                        <Insets />
-                     </HBox.margin>
-                     </Button>
+                  <Pane prefHeight="200.0" prefWidth="200.0">
+                     <children>
+                        <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" depthTest="DISABLE" graphicTextGap="8.0" layoutY="273.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red;" text="Encrypt" textAlignment="RIGHT" textFill="RED" textOverrun="LEADING_ELLIPSIS">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <padding>
+                              <Insets right="50.0" />
+                           </padding>
+                           </Button>
+                           <Button fx:id="Downloadbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" depthTest="DISABLE" graphicTextGap="8.0" layoutY="273.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: green; -fx-background-color: tranparent;" text="Download" textAlignment="RIGHT" textFill="GREEN" textOverrun="LEADING_ELLIPSIS">
+                           <opaqueInsets>
+                              <Insets />
+                           </opaqueInsets>
+                           <padding>
+                              <Insets right="50.0" />
+                           </padding>
+                           </Button>
+                     </children>
+                  </Pane>
              	  </children>
              	  <VBox.margin>
                  	 <Insets />

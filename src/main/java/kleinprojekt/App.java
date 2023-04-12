@@ -19,7 +19,9 @@ public class App extends Application {
     @Override
     public void start(Stage stage) throws IOException {
         scene = new Scene(loadFXML("primary"));
+        scene.getStylesheets().addAll(getClass().getResource("styles.css").toExternalForm());
         stage.setScene(scene);
+        stage.setResizable(false);
         stage.setTitle("Protector de datos");
         stage.getIcons().add(new Image(App.class.getResourceAsStream("favicon-32x32.png")));
         stage.show();

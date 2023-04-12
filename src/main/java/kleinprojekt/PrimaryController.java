@@ -1,7 +1,13 @@
 package kleinprojekt;
 
+import java.io.BufferedInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -23,7 +29,6 @@ public class PrimaryController {
 	private int maxFileSize = 2 * (1024 * 1024);
 	private String regex = new Regex().regex4();
 	private Alert alert;
-	private String inputFile = null;
 	private List<File> files = null;
 	private String[] ciphers = { "AES", "RSA", "Salt", "Salt and Pepper" };
 	
@@ -43,6 +48,9 @@ public class PrimaryController {
 	private Button decryptbtn;
 	
 	@FXML
+	private Button createPasswordbtn;
+	
+	@FXML
 	private ComboBox<String> CbCipher;
 	
 	@FXML
@@ -57,6 +65,11 @@ public class PrimaryController {
 		encryptbtn.setUnderline(true);
 		activeTab = "encrypted";
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
+		createPasswordbtn.setText("🔑");
+		Downloadbtn.setVisible(false);
+		EnDecrypbtn.setVisible(true);
+		EnDecrypbtn.getStyleClass().add("btn-red");
+		tfPassword.getStyleClass().add("txt-pw");
 		CbCipher.getItems().addAll(ciphers);
 		alert = new Alert(AlertType.NONE);
 	}
@@ -69,6 +82,9 @@ public class PrimaryController {
 		decryptbtn.setUnderline(true);
 		EnDecrypbtn.setText("Decrypt");
 		FilesEncryptDecryptSurface.setText("File to decrypt");
+		tfPassword.setPrefWidth(200);
+		createPasswordbtn.setVisible(false);
+		tfPassword.clear();
 		activeTab = "decrypted";
 	}
 
@@ -80,6 +96,9 @@ public class PrimaryController {
 		decryptbtn.setUnderline(false);
 		EnDecrypbtn.setText("Encrypt");
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
+		tfPassword.setPrefWidth(165);
+		createPasswordbtn.setVisible(true);
+		tfPassword.clear();
 		activeTab = "encrypted";
 	}
 	
@@ -110,11 +129,11 @@ public class PrimaryController {
 				alert.setContentText("No File fetched!");
 				alert.show();
 				//System.out.println("No File fetched!");
-			}else if (files.size() != 1) {
+			}else if (files.get(0).getName().indexOf(".encrypted") == -1) {
 				alert.setAlertType(AlertType.WARNING);
-				alert.setContentText("Please select one File to decrypt!");
+				alert.setContentText("Please select an encrypted File");
 				alert.show();
-				//System.out.println("Please select one File to decrypt!");
+				//System.out.println("Please select an encrypted File");
 				return;
 			} else if (files.get(0).length() > maxFileSize) {
 				alert.setAlertType(AlertType.WARNING);
@@ -122,11 +141,11 @@ public class PrimaryController {
 				alert.show();
 				//System.out.println("Large file sizes might crash the application \nPlease select smaller files.");
 				return;
-			} else if (files.get(0).getName().indexOf(".encrypted") == -1) {
+			} else if (files.size() != 1) {
 				alert.setAlertType(AlertType.WARNING);
-				alert.setContentText("Please select an encrypted File");
+				alert.setContentText("Please select one File to decrypt!");
 				alert.show();
-				//System.out.println("Please select an encrypted File");
+				//System.out.println("Please select one File to decrypt!");
 				return;
 			} else {
 				for (File f : files) System.out.println(f.getName());
@@ -158,11 +177,22 @@ public class PrimaryController {
 				alert.show();
 				return;
 				//System.out.println("Error No File fetched!");
-			}
-			else if (files.get(0).length() > maxFileSize) {
+			} else if (files.size() != 1) {
 				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Please select one File to decrypt!");
+				alert.show();
+				//System.out.println("Please select one File to decrypt!");
+				return;
+			} else if (files.get(0).length() > maxFileSize) {
+				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Large file sizes might crash the application \nPlease select smaller files.");
+				alert.show();
+				//System.out.println("Large file sizes might crash the application \nPlease select smaller files.");
+				return;
+			} else {
+				for (File f : files) System.out.println(f.getName());
+				FilesEncryptDecryptSurface.setText("File to Decrypt ✅");
 			}
-			else FilesEncryptDecryptSurface.setText("File to Decrypt ✅");
 		} else if (activeTab.equals("encrypted")) {
 			files = fChooser.showOpenMultipleDialog(null);
 			if (files.isEmpty()) {
@@ -189,6 +219,82 @@ public class PrimaryController {
 		
 	}
 	
+	private void enablePasswordInputs() {
+		tfPassword.setDisable(false);
+		createPasswordbtn.setDisable(false);
+	}
+	
+	private void crypt() throws IOException {
+		String password = tfPassword.getText().toString();
+		File zipFile = null;
+		FileOutputStream fos = null;
+		FileInputStream fis = null;
+		ZipOutputStream zos = null;
+		BufferedInputStream bis = null;
+		byte[] data = null;
+		
+		if (files == null) {
+			if (activeTab.equals("encrypted")) {
+				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Please select a file to encrypt!");
+				alert.show();
+				return;
+			} else if (activeTab.equals("decrypted")) {
+				alert.setAlertType(AlertType.WARNING);
+				alert.setContentText("Please select a file to decrypt!");
+				alert.show();
+				return;
+			}
+		} else if (isEmpty(password)) {
+			alert.setAlertType(AlertType.WARNING);
+			alert.setContentText("Please enter a valid Password");
+			alert.show();
+		} else {
+			if (activeTab.equals("encrypted")) {
+				if (files.size() > 1) {
+					zipFile = new File("cryptedZipFile");
+					fos = new FileOutputStream(zipFile);
+					zos = new ZipOutputStream(fos);
+					for (File f : files) zipFile(f, zos);	
+					zos.close();
+				} else {
+					zipFile = new File(files.get(0).getName());
+					fos = new FileOutputStream(zipFile);
+					zos = new ZipOutputStream(fos);
+					zipFile(zipFile, zos);
+					zos.close();
+				}
+				fis = new FileInputStream(zipFile);
+				data = new byte[(int) zipFile.length()];
+				bis = new BufferedInputStream(fis);
+				bis.read(data, 0, data.length);
+			}
+			// encryption
+		}
+	}
+	
+	private void zipFile(File file, ZipOutputStream zos) throws IOException {
+		final int buffer = 1024;
+		BufferedInputStream bis = null;
+		try {
+			FileInputStream fis = new FileInputStream(file);
+			bis = new BufferedInputStream(fis, buffer);
+			
+			ZipEntry entry = new ZipEntry(file.getName());
+			zos.putNextEntry(entry);
+			byte data[] = new byte[buffer];
+			int count;
+			while ((count = bis.read(data, 0, buffer)) != 1) zos.write(data, 0, count);
+			zos.closeEntry();
+		} finally {
+			try {
+				bis.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	private boolean checkValidPassword(String pw) {
 		return (!isEmpty(pw) && pw.matches(regex));
 	}
@@ -201,11 +307,12 @@ public class PrimaryController {
 		
 	}
 	
-	private void fileUpload() {
-		
+	private void showDownloadButton() {
+		EnDecrypbtn.setVisible(false);
+		Downloadbtn.setVisible(true);
 	}
 	
-	private void enablePasswordInputs() {
+	private void fileUpload() {
 		
 	}
 	
