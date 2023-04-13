@@ -53,12 +53,12 @@
                   </VBox>
                   <Pane prefHeight="200.0" prefWidth="200.0">
                      <children>
-                        <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" onAction="#crypt" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red;" text="Encrypt" textAlignment="RIGHT" textFill="RED">
+                        <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" onMouseClicked="#crypt" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red;" text="Encrypt" textFill="RED">
                            <padding>
                               <Insets right="50.0" />
                            </padding>
                        	</Button>
-                        <Button fx:id="Downloadbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: green; -fx-background-color: tranparent;" text="Download" textAlignment="RIGHT" textFill="GREEN">
+                        <Button fx:id="savebtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" onMouseClicked="#saveClicked" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: green; -fx-background-color: tranparent;" text="Save" textFill="GREEN">
                            <padding>
                               <Insets right="50.0" />
                            </padding>

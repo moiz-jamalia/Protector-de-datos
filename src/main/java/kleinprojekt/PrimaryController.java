@@ -3,6 +3,7 @@ package kleinprojekt;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +35,7 @@ import javafx.scene.input.DragEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
+import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 
 public class PrimaryController {
@@ -59,7 +61,7 @@ public class PrimaryController {
 	private Button EnDecrypbtn;
 	
 	@FXML
-	private Button Downloadbtn;
+	private Button savebtn;
 	
 	@FXML
 	private Button encryptbtn;
@@ -86,7 +88,7 @@ public class PrimaryController {
 		activeTab = "encrypted";
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
 		createPasswordbtn.setText("🔑");
-		Downloadbtn.setVisible(false);
+		savebtn.setVisible(false);
 		EnDecrypbtn.setVisible(true);
 		EnDecrypbtn.getStyleClass().add("btn-red");
 		tfPassword.getStyleClass().add("txt-pw");
@@ -210,28 +212,27 @@ public class PrimaryController {
 	
 	@FXML
 	void generatePassword(ActionEvent event) {
-		//Still in process
-		 
-		//Xeger generator = new Xeger(regex);
-		//tfPassword.setText(generator.generate());
+		//Still in process		 
+		//tfPassword.setText("");
 	 }
 	
 	@FXML
-	void downloadFile(ActionEvent event) {
-		if (activeTab.equals("encrypted")) downloadFile(encryptedFile);
-		else if (activeTab.equals("decrypted")) downloadFile(decryptedFile);
+	void crypt(MouseEvent event) {
+		EnDecrypbtn.setVisible(false);
+		savebtn.setVisible(true);
 	}
 	
-	@FXML
-	void crypt(ActionEvent event) throws Exception {
-		String password = tfPassword.getText().toString();
+    @FXML
+    void saveClicked(MouseEvent event) throws Exception {
+    	String password = tfPassword.getText().toString();
 		File zipFile = null;
 		FileOutputStream fos = null;
 		FileInputStream fis = null;
 		ZipOutputStream zos = null;
 		BufferedInputStream bis = null;
 		byte[] data = null;
-		
+		DirectoryChooser dirChooser = new DirectoryChooser();
+		File dirFile = dirChooser.showDialog(null);
 		if (files == null) {
 			if (activeTab.equals("encrypted")) {
 				alert(AlertType.WARNING, "Please select a file to encrypt!");
@@ -247,14 +248,14 @@ public class PrimaryController {
 			if (activeTab.equals("encrypted")) {
 				System.out.println("File size: " + files.size()); // debugging
 				if (files.size() > 1) {
-					zipFile = new File("cryptedZipFile.zip");
+					zipFile = new File(dirFile + "cryptedZipFile.zip");
 					fos = new FileOutputStream(zipFile);
 					zos = new ZipOutputStream(fos);
 					for (File f : files) zipFile(f, zos);	
 					zos.close();
 					System.out.println("Zip-File Name: " + zipFile.getName()); // debugging
 				} else {
-					zipFile = new File(files.get(0).getName() + ".zip");
+					zipFile = new File(dirFile + files.get(0).getName() + ".zip");
 					fos = new FileOutputStream(zipFile);
 					zos = new ZipOutputStream(fos);
 					zipFile(zipFile, zos);
@@ -286,7 +287,6 @@ public class PrimaryController {
 					
 				case "Salt":
 					break;
-
 				case "Salt and Pepper":
 					break;
 				}
@@ -294,11 +294,7 @@ public class PrimaryController {
 			*/
 			// encryption
 		}
-	}
-	
-	private void downloadFile(byte[] encryptedData) {
-		
-	}
+    }
 	
 	private void disableAll() {
 		EnDecrypbtn.setDisable(true);
@@ -310,7 +306,6 @@ public class PrimaryController {
 		//Still in progress
 		
 		String pwInput = tfPassword.getText();
-		
 	}
 	
 	private void enablePasswordInputs() {
@@ -381,10 +376,6 @@ public class PrimaryController {
 		Base64.Decoder decoder = Base64.getDecoder();
 		return cipher.doFinal(decoder.decode(data));
 	}
-
-	private boolean checkValidPassword(String pw) {
-		return (!isEmpty(pw) && pw.matches(regex));
-	}
 	
 	private byte[] salt() throws Exception {
 		Random r = new SecureRandom();
@@ -397,16 +388,11 @@ public class PrimaryController {
 		String str = "securePepper";
 		return str.getBytes(StandardCharsets.UTF_8);
 	}
-	
-	private void disableDownload() {
-		
+
+	private boolean checkValidPassword(String pw) {
+		return (!isEmpty(pw) && pw.matches(regex));
 	}
-	
-	private void showDownloadButton() {
-		EnDecrypbtn.setVisible(false);
-		Downloadbtn.setVisible(true);
-	}
-	
+
 	private boolean isEmpty(String str) {
 		if (str.trim().length() == 0) return true;
 		else return false;
