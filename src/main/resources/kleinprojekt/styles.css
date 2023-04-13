@@ -10,10 +10,5 @@
 
 .combo-box .cell:selected {
 	-fx-text-fill: blue;
-	-fx-alignment: right;
-}
-
-.combo-box .list-view {
-	-fx-border-color: blue;
-	-fx-background-color: transparent;
+	-fx-alignment: left;
 }
