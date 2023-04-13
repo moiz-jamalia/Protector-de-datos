@@ -93,7 +93,6 @@ public class PrimaryController {
 		CbCipher.getItems().addAll(ciphers);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		alert = new Alert(AlertType.NONE);
-		//Xeger generate = new Xeger(regex);
 		System.out.println("Regex: " + regex); //debugging
 		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
