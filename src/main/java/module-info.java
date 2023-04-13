@@ -3,6 +3,7 @@ module kleinprojekt {
     requires javafx.fxml;
 	requires javafx.base;
 	requires javafx.graphics;
+	requires automaton;
 
     opens kleinprojekt to javafx.fxml;
     exports kleinprojekt;

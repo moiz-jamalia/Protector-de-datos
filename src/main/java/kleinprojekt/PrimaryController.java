@@ -5,9 +5,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.MessageDigest;
+import java.time.Year;
+import java.util.Arrays;
 import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -27,10 +33,12 @@ public class PrimaryController {
 
 	private String activeTab = "encrypt";
 	private int maxFileSize = 2 * (1024 * 1024);
-	private String regex = new Regex().regex4();
+	private String regex = new Regex().getRegex4();
 	private Alert alert;
 	private List<File> files = null;
 	private String[] ciphers = { "AES", "RSA", "Salt", "Salt and Pepper" };
+	private byte[] key;
+	private SecretKeySpec secretKeySpec;
 	
 	@FXML
 	private AnchorPane MainPane;
@@ -72,6 +80,15 @@ public class PrimaryController {
 		tfPassword.getStyleClass().add("txt-pw");
 		CbCipher.getItems().addAll(ciphers);
 		alert = new Alert(AlertType.NONE);
+		//Xeger generate = new Xeger(regex);
+		System.out.println("Regex: " + regex);
+		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
+			try {
+				crypt();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		});
 	}
 	
 	@FXML
@@ -119,7 +136,7 @@ public class PrimaryController {
 				return;
 			}
 			else {
-				for (File f : files) System.out.println(f.getName());
+				//for (File f : files) System.out.println(f.getName());
 				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
 			}
 		} else if (activeTab.equals("decrypted")){
@@ -148,7 +165,7 @@ public class PrimaryController {
 				//System.out.println("Please select one File to decrypt!");
 				return;
 			} else {
-				for (File f : files) System.out.println(f.getName());
+				//for (File f : files) System.out.println(f.getName());
 				FilesEncryptDecryptSurface.setText("File to Decrypt ✅");		
 			}
 		}
@@ -190,7 +207,7 @@ public class PrimaryController {
 				//System.out.println("Large file sizes might crash the application \nPlease select smaller files.");
 				return;
 			} else {
-				for (File f : files) System.out.println(f.getName());
+				//for (File f : files) System.out.println(f.getName());
 				FilesEncryptDecryptSurface.setText("File to Decrypt ✅");
 			}
 		} else if (activeTab.equals("encrypted")) {
@@ -202,11 +219,20 @@ public class PrimaryController {
 				//System.out.println("Error No File fetched!");
 			}
 			else {
-				for (File f : files) System.out.println(f.getName());
+				//for (File f : files) System.out.println(f.getName());
 				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
 			}
 		}
 	}
+	
+	 @FXML
+	 private void generatePassword(ActionEvent event) {
+		//Still in process
+		 
+		 
+		//Xeger generator = new Xeger(regex);
+		//tfPassword.setText(generator.generate());
+	 }
 	
 	private void disableAll() {
 		EnDecrypbtn.setDisable(true);
@@ -215,6 +241,8 @@ public class PrimaryController {
 	}
 	
 	private void passwordInputChange() {
+		//Still in progress
+		
 		String pwInput = tfPassword.getText();
 		
 	}
@@ -224,7 +252,7 @@ public class PrimaryController {
 		createPasswordbtn.setDisable(false);
 	}
 	
-	private void crypt() throws IOException {
+	private void crypt() throws Exception {
 		String password = tfPassword.getText().toString();
 		File zipFile = null;
 		FileOutputStream fos = null;
@@ -251,6 +279,7 @@ public class PrimaryController {
 			alert.show();
 		} else {
 			if (activeTab.equals("encrypted")) {
+				System.out.println("File size: " + files.size());
 				if (files.size() > 1) {
 					zipFile = new File("cryptedZipFile");
 					fos = new FileOutputStream(zipFile);
@@ -269,22 +298,39 @@ public class PrimaryController {
 				bis = new BufferedInputStream(fis);
 				bis.read(data, 0, data.length);
 			}
+			String cipher = CbCipher.getSelectionModel().getSelectedItem();
+			System.out.println("Cipher: " + CbCipher.getSelectionModel().getSelectedItem());
+			switch (cipher) {
+			case "AES":
+				File file = AESEncrypt(data, tfPassword.getText());
+				downloadFile(file);
+				showDownloadButton();
+				break;
+				
+			case "RSA":
+				break;
+				
+			case "Salt":
+				break;
+
+			case "Salt and Pepper":
+				break;
+			}
 			// encryption
 		}
 	}
 	
 	private void zipFile(File file, ZipOutputStream zos) throws IOException {
-		final int buffer = 1024;
 		BufferedInputStream bis = null;
 		try {
 			FileInputStream fis = new FileInputStream(file);
-			bis = new BufferedInputStream(fis, buffer);
+			bis = new BufferedInputStream(fis, maxFileSize);
 			
 			ZipEntry entry = new ZipEntry(file.getName());
 			zos.putNextEntry(entry);
-			byte data[] = new byte[buffer];
-			int count;
-			while ((count = bis.read(data, 0, buffer)) != 1) zos.write(data, 0, count);
+			byte data[] = new byte[maxFileSize];
+			int count;			
+			while ((count = bis.read(data, 0, maxFileSize)) != -1) zos.write(data, 0, count);	
 			zos.closeEntry();
 		} finally {
 			try {
@@ -294,13 +340,28 @@ public class PrimaryController {
 			}
 		}
 	}
+	
+	private void setKey(final String myKey) throws Exception {
+		key = myKey.getBytes("UTF-8");
+		MessageDigest md = MessageDigest.getInstance("SHA-1");
+		key = md.digest(key);
+		key = Arrays.copyOf(key, maxFileSize);
+		secretKeySpec = new SecretKeySpec(key, "AES");
+	}
+	
+	private File AESEncrypt(byte[] data, String secret) throws Exception {
+		setKey(secret);
+		Cipher cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+		byte[] cipherText = cipher.doFinal(data);
+		
+		File file = new File(files.get(0).getName() + ".encrypted");
+		
+		return file;
+	}
 
 	private boolean checkValidPassword(String pw) {
 		return (!isEmpty(pw) && pw.matches(regex));
-	}
-	
-	private void generatePassword() {
-		tfPassword.setText("");
 	}
 	
 	private void disableDownload() {
@@ -325,7 +386,7 @@ public class PrimaryController {
 		
 	}
 	
-	private void downloadFile() {
+	private void downloadFile(File file) {
 		
 	}
 }

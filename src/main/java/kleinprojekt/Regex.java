@@ -1,44 +1,32 @@
 package kleinprojekt;
 
-public class Regex implements IRegex {
-
-	/**
-	 * Just a test-regex for development (minimum 3 & maximum 10 characters, no whitespaces)
-	 */
-	@Override
-	public String regex0() {
-		return "/^.[^\\s]{2,10}$/";
+public class Regex {
+	
+	private String regex0 = "/^.[^\\s]{2,10}$/v";
+	private String regex1 = "/^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{8,}$/";
+	private String regex2 = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{8,}$/";
+	private String regex3 = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{12,}$/";
+	private String regex4 = "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{16,}$/";
+	
+	public String getRegex0() {
+		return regex0;
+	}
+	
+	public String getRegex1() {
+		return regex1;
 	}
 
-	/**
-	 * Minimum eight characters, at least one letter, one number and one special character
-	 */
-	@Override
-	public String regex1() {
-		return "/^(?=.*[A-Za-z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{8,}$/";
+	public String getRegex2() {
+		return regex2;
 	}
 
-	/**
-	 * Minimum eight characters, at least one uppercase letter, one lowercase letter, one number and one special character
-	 */
-	@Override
-	public String regex2() {
-		return "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{8,}$/";
+	public String getRegex3() {
+		return regex3;
 	}
 
-	/**
-	 * Minimum twelve characters, at least one uppercase letter, one lowercase letter, one number and one special character
-	 */
-	@Override
-	public String regex3() {
-		return "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{12,}$/";
+	public String getRegex4() {
+		return regex4;
 	}
-
-	/**
-	 *  Minimum sixteen characters, at least one uppercase letter, one lowercase letter, one number and one special character
-	 */
-	@Override
-	public String regex4() {
-		return "/^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%|*?&+-])[A-Za-z\\d@$!%|*?&+-]{16,}$/";
-	}
+	
+	
 }

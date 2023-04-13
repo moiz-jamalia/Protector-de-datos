@@ -29,7 +29,7 @@
                         <Pane prefHeight="29.0" prefWidth="200.0">
                            <children>
                               <TextField fx:id="tfPassword" prefHeight="30.0" prefWidth="165.0" promptText="Your Password..." style="-fx-background-color: transparent; -fx-border-color: white; -fx-text-fill: white;" />
-                              <Button fx:id="createPasswordbtn" layoutX="165.0" mnemonicParsing="false" prefHeight="30.0" prefWidth="35.0" style="-fx-background-color: transparent; -fx-border-color: #f1bc31;" textFill="#f1bc31" />
+                              <Button fx:id="createPasswordbtn" layoutX="165.0" mnemonicParsing="false" onAction="#generatePassword" onMouseEntered="#handleHover" prefHeight="30.0" prefWidth="35.0" style="-fx-background-color: transparent; -fx-border-color: #f1bc31;" textFill="#f1bc31" />
                            </children>
                         </Pane>
                      </children></VBox>
