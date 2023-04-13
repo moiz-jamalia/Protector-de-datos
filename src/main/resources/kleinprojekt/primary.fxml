@@ -53,7 +53,7 @@
                   </VBox>
                   <Pane prefHeight="200.0" prefWidth="200.0">
                      <children>
-                        <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" onAction="#encrypt" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red;" text="Encrypt" textAlignment="RIGHT" textFill="RED">
+                        <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" onAction="#crypt" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red;" text="Encrypt" textAlignment="RIGHT" textFill="RED">
                            <padding>
                               <Insets right="50.0" />
                            </padding>

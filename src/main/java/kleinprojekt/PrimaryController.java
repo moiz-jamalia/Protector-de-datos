@@ -5,14 +5,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -94,14 +97,14 @@ public class PrimaryController {
 		System.out.println("Regex: " + regex); //debugging
 		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
-				if (!isEmpty(tfPassword.getText()) || files.size() < 1 || (CbCipher.getSelectionModel().getSelectedIndex() < 0)) {
+				if (!isEmpty(tfPassword.getText()) && files.size() >= 1 && (CbCipher.getSelectionModel().getSelectedIndex() < 0)) {
 					System.out.println("Remove Style"); //debugging
 					System.out.println("Get Selected Index: " + CbCipher.getSelectionModel().getSelectedIndex()); //debugging
 					EnDecrypbtn.getStyleClass().remove("btn-red");
 				} else {
 					System.out.println("Add Style"); //debugging
 					System.out.println("Get Selected Index: " + CbCipher.getSelectionModel().getSelectedIndex()); //debugging
-					EnDecrypbtn.getStyleClass().add(null);
+					EnDecrypbtn.getStyleClass().add("btn-red");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -138,12 +141,12 @@ public class PrimaryController {
 	}
 	
 	@FXML
-	private void handleDragOver(DragEvent event) {
+	void handleDragOver(DragEvent event) {
 		if (event.getDragboard().hasFiles()) event.acceptTransferModes(TransferMode.ANY);
 	}
 	
 	@FXML
-	private void handleDrop(DragEvent event) {
+	void handleDrop(DragEvent event) {
 		if (activeTab.equals("encrypted")) {
 			files = event.getDragboard().getFiles();
 			if (files.isEmpty()) {
@@ -170,17 +173,17 @@ public class PrimaryController {
 	}
 	
 	@FXML
-	private void handleHover(MouseEvent event) {
+	void handleHover(MouseEvent event) {
 		FilesEncryptDecryptSurface.setStyle("-fx-background-color: #f1bc31; -fx-text-fill: white;");
 	}
 	
 	@FXML
-	private void handleExited(MouseEvent event) {
+	void handleExited(MouseEvent event) {
 		FilesEncryptDecryptSurface.setStyle("-fx-backgorund-color: transparent; -fx-text-fill: #f1bc31; -fx-border-color: #f1bc31;");
 	}
 	
 	@FXML
-	private void handlePressed(MouseEvent event) {
+	void handlePressed(MouseEvent event) {
 		FileChooser fChooser = new FileChooser();
 		if (activeTab.equals("decrypted")) {
 			FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter("ENCRYPTED File (*.encrypted)", "*.encrypted");
@@ -207,7 +210,7 @@ public class PrimaryController {
 	}
 	
 	@FXML
-	private void generatePassword(ActionEvent event) {
+	void generatePassword(ActionEvent event) {
 		//Still in process
 		 
 		//Xeger generator = new Xeger(regex);
@@ -215,13 +218,13 @@ public class PrimaryController {
 	 }
 	
 	@FXML
-	private void downloadFile(ActionEvent event) {
+	void downloadFile(ActionEvent event) {
 		if (activeTab.equals("encrypted")) downloadFile(encryptedFile);
 		else if (activeTab.equals("decrypted")) downloadFile(decryptedFile);
 	}
 	
 	@FXML
-	private void crypt(ActionEvent event) throws Exception {
+	void crypt(ActionEvent event) throws Exception {
 		String password = tfPassword.getText().toString();
 		File zipFile = null;
 		FileOutputStream fos = null;
@@ -245,14 +248,14 @@ public class PrimaryController {
 			if (activeTab.equals("encrypted")) {
 				System.out.println("File size: " + files.size()); // debugging
 				if (files.size() > 1) {
-					zipFile = new File("cryptedZipFile");
+					zipFile = new File("cryptedZipFile.zip");
 					fos = new FileOutputStream(zipFile);
 					zos = new ZipOutputStream(fos);
 					for (File f : files) zipFile(f, zos);	
 					zos.close();
 					System.out.println("Zip-File Name: " + zipFile.getName()); // debugging
 				} else {
-					zipFile = new File(files.get(0).getName());
+					zipFile = new File(files.get(0).getName() + ".zip");
 					fos = new FileOutputStream(zipFile);
 					zos = new ZipOutputStream(fos);
 					zipFile(zipFile, zos);
@@ -268,7 +271,7 @@ public class PrimaryController {
 			}
 			String cipher = CbCipher.getSelectionModel().getSelectedItem();
 			System.out.println("Cipher: " + CbCipher.getSelectionModel().getSelectedItem()); // debugging
-			
+			/**
 			if (checkValidPassword(tfPassword.getText())) {
 				switch (cipher) {
 				case "AES":
@@ -289,6 +292,7 @@ public class PrimaryController {
 					break;
 				}
 			}
+			*/
 			// encryption
 		}
 	}
@@ -381,6 +385,18 @@ public class PrimaryController {
 
 	private boolean checkValidPassword(String pw) {
 		return (!isEmpty(pw) && pw.matches(regex));
+	}
+	
+	private byte[] salt() throws Exception {
+		Random r = new SecureRandom();
+		byte[] salt = new byte[16];
+		r.nextBytes(salt);
+		return salt;
+	}
+	
+	private byte[] pepper() throws Exception {
+		String str = "securePepper";
+		return str.getBytes(StandardCharsets.UTF_8);
 	}
 	
 	private void disableDownload() {
