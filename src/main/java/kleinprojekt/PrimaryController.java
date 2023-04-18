@@ -3,7 +3,6 @@ package kleinprojekt;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,11 +11,9 @@ import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.PublicKey;
-import java.security.SecureRandom;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.util.Random;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -45,7 +42,7 @@ public class PrimaryController {
 	private String regex = new Regex().getRegex4();
 	private Alert alert;
 	private List<File> files = null;
-	private String[] ciphers = { "AES", "RSA", "Salt", "Salt and Pepper" };
+	private String[] ciphers = { "AES", "RSA", "TripleDES" };
 	private Cipher cipher = null;
 	private byte[] encryptedFile;
 	private byte[] decryptedFile;
@@ -90,7 +87,7 @@ public class PrimaryController {
 		createPasswordbtn.setText("🔑");
 		savebtn.setVisible(false);
 		EnDecrypbtn.setVisible(true);
-		EnDecrypbtn.getStyleClass().add("btn-red");
+		EnDecrypbtn.getStyleClass().add("stripes");
 		tfPassword.getStyleClass().add("txt-pw");
 		CbCipher.getItems().addAll(ciphers);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
@@ -98,14 +95,16 @@ public class PrimaryController {
 		System.out.println("Regex: " + regex); //debugging
 		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
-				if (!isEmpty(tfPassword.getText()) && files.size() >= 1 && (CbCipher.getSelectionModel().getSelectedIndex() < 0)) {
+				if (isEmpty(tfPassword.getText()) || files.size() >= 1 || (CbCipher.getSelectionModel().getSelectedIndex() < 0)) {
 					System.out.println("Remove Style"); //debugging
 					System.out.println("Get Selected Index: " + CbCipher.getSelectionModel().getSelectedIndex()); //debugging
-					EnDecrypbtn.getStyleClass().remove("btn-red");
+					EnDecrypbtn.getStyleClass().remove("stripes");
+					EnDecrypbtn.getStyleClass().add("btn-red");
 				} else {
 					System.out.println("Add Style"); //debugging
 					System.out.println("Get Selected Index: " + CbCipher.getSelectionModel().getSelectedIndex()); //debugging
-					EnDecrypbtn.getStyleClass().add("btn-red");
+					EnDecrypbtn.getStyleClass().remove("btn-red");
+					EnDecrypbtn.getStyleClass().add("stripes");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -218,13 +217,19 @@ public class PrimaryController {
 	
 	@FXML
 	void crypt(MouseEvent event) {
-		EnDecrypbtn.setVisible(false);
-		savebtn.setVisible(true);
+		if (isEmpty(tfPassword.getText()) || files.size() >= 1 || CbCipher.getSelectionModel().getSelectedIndex() < 0) {
+			EnDecrypbtn.setVisible(false);
+			savebtn.setVisible(true);	
+		}
+		else {
+			EnDecrypbtn.setVisible(true);
+			savebtn.setVisible(false);
+		}
 	}
 	
     @FXML
     void saveClicked(MouseEvent event) throws Exception {
-    	String password = tfPassword.getText().toString();
+    	String password = tfPassword.getText();
 		File zipFile = null;
 		FileOutputStream fos = null;
 		FileInputStream fis = null;
@@ -246,53 +251,79 @@ public class PrimaryController {
 			return;
 		} else {
 			if (activeTab.equals("encrypted")) {
-				System.out.println("File size: " + files.size()); // debugging
-				if (files.size() > 1) {
-					zipFile = new File(dirFile + "cryptedZipFile.zip");
+				if(files.size() > 1) {
+					zipFile = new File(dirFile + "\\cryptedZipFile.zip");
 					fos = new FileOutputStream(zipFile);
 					zos = new ZipOutputStream(fos);
-					for (File f : files) zipFile(f, zos);	
+					for (File f : files) zipFile(f, zos);
 					zos.close();
-					System.out.println("Zip-File Name: " + zipFile.getName()); // debugging
 				} else {
-					zipFile = new File(dirFile + files.get(0).getName() + ".zip");
+					zipFile = new File(dirFile + "\\" + (files.get(0).getName() + ".zip"));
 					fos = new FileOutputStream(zipFile);
 					zos = new ZipOutputStream(fos);
-					zipFile(zipFile, zos);
+					zipFile(files.get(0), zos);
 					zos.close();
-					System.out.println("zipFile Name: " + zipFile.getName()); // debugging
 				}
 				fis = new FileInputStream(zipFile);
 				data = new byte[(int) zipFile.length()];
 				bis = new BufferedInputStream(fis);
 				bis.read(data, 0, data.length);
-			} else if (activeTab.equals("decrypterd")) {
 				
-			}
-			String cipher = CbCipher.getSelectionModel().getSelectedItem();
-			System.out.println("Cipher: " + CbCipher.getSelectionModel().getSelectedItem()); // debugging
-			/**
-			if (checkValidPassword(tfPassword.getText())) {
-				switch (cipher) {
-				case "AES":
-					if (activeTab.equals("encrypted")) encryptedFile = AESEncrypt(data, tfPassword.getText());
-					else if (activeTab.equals("decrypted")) decryptedFile = AESDecrypt(data, tfPassword.getText());
-					break;
+				String cipher = CbCipher.getSelectionModel().getSelectedItem();
+			
+				if (checkValidPassword(password)) {
+					switch (cipher) {
+					case "AES":
+						encryptedFile = AESEncrypt(data, password); 
+						break;
 					
-				case "RSA":
-					generateKey();
-					if (activeTab.equals("encrypted")) encryptedFile = RSAEncrypt(data);
-					else if (activeTab.equals("decrypted")) decryptedFile = RSADecrypt(data);
-					break;
+					case "RSA":
+						generateKey();
+						encryptedFile = RSAEncrypt(data);
+						break;
 					
-				case "Salt":
-					break;
-				case "Salt and Pepper":
-					break;
+					case "TripleDES":
+						encryptedFile = TripleDESEncrypt(data, password);
+						break;
+					}
+				}
+				
+				String encryptedFileName = null;
+				
+				if (files.size() > 1) encryptedFileName = "cryptedZipFile.encrypted";
+				else encryptedFileName = files.get(0).getName() + ".encrypted";
+				
+				try (FileOutputStream foss = new FileOutputStream(dirFile + "\\" + encryptedFileName)) {
+					foss.write(encryptedFile);
+				}
+				
+				if (zipFile.delete()) System.out.println("successful deleted");
+				else System.out.println("fuck u brad!");
+				
+			} else if (activeTab.equals("decrypted")) {
+				String cipher = CbCipher.getSelectionModel().getSelectedItem();
+				
+				if (checkValidPassword(password)) {
+					switch (cipher) {
+					case "AES":
+						decryptedFile = AESDecrypt(data, password);
+						break;
+					
+					case "RSA":
+						decryptedFile = RSADecrypt(data);
+						break;
+					
+					case "TripleDES":
+						decryptedFile = TripleDESDecrypt(data, password);
+						break;
+					}
+				}
+				
+				try (FileOutputStream foss = new FileOutputStream(dirFile + "\\" + files.get(0).getName())) {
+					foss.write(decryptedFile);
 				}
 			}
-			*/
-			// encryption
+			
 		}
     }
 	
@@ -333,23 +364,23 @@ public class PrimaryController {
 		}
 	}
 	
-	private void setKey(final String myKey) throws Exception {
-		key = myKey.getBytes("UTF-8");
+	private void setKey(final String myKey, String algorithm) throws Exception {
+		key = myKey.getBytes(StandardCharsets.UTF_8);
 		MessageDigest md = MessageDigest.getInstance("SHA-1");
 		key = md.digest(key);
 		key = Arrays.copyOf(key, maxFileSize);
-		secretKeySpec = new SecretKeySpec(key, "AES");
+		secretKeySpec = new SecretKeySpec(key, algorithm);
 	}
 	
-	private byte[] AESEncrypt(byte[] data, String secret) throws Exception {
-		setKey(secret);
+	private byte[] AESEncrypt(byte[] data, String passowrd) throws Exception {
+		setKey(passowrd, "AES");
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
 		Base64.Encoder encoder = Base64.getEncoder();
 		return encoder.encode(cipher.doFinal(data));
 	}
 	
-	private byte[] AESDecrypt(byte[] data, String secret) throws Exception {
-		setKey(secret);
+	private byte[] AESDecrypt(byte[] data, String password) throws Exception {
+		setKey(password, "AES");
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
 		Base64.Decoder decoder = Base64.getDecoder();
 		return cipher.doFinal(decoder.decode(data));
@@ -377,16 +408,20 @@ public class PrimaryController {
 		return cipher.doFinal(decoder.decode(data));
 	}
 	
-	private byte[] salt() throws Exception {
-		Random r = new SecureRandom();
-		byte[] salt = new byte[16];
-		r.nextBytes(salt);
-		return salt;
+	private byte[] TripleDESEncrypt(byte[] data, String password) throws Exception {
+		setKey(password, "TripleDES");
+		cipher = Cipher.getInstance("TripleDES/CBC/PKCS5PADDING");
+		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
+		Base64.Encoder encoder = Base64.getEncoder();
+		return encoder.encode(cipher.doFinal(data));
 	}
 	
-	private byte[] pepper() throws Exception {
-		String str = "securePepper";
-		return str.getBytes(StandardCharsets.UTF_8);
+	private byte[] TripleDESDecrypt(byte[] data, String password) throws Exception {
+		setKey(password, "TripleDES");
+		cipher = Cipher.getInstance("TripleDES/CBC/PKCS5PADDING");
+		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
+		Base64.Decoder decoder = Base64.getDecoder();
+		return cipher.doFinal(decoder.decode(data));
 	}
 
 	private boolean checkValidPassword(String pw) {
