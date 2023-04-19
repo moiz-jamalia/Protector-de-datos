@@ -34,12 +34,14 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import nl.flotsam.xeger.Xeger;
+
 
 public class PrimaryController {
 
 	private String activeTab = "encrypt";
 	private int maxFileSize = 2 * (1024 * 1024);
-	private String regex = new Regex().getRegex4();
+	private String regex = new Regex().getRegex1();
 	private Alert alert;
 	private List<File> files = null;
 	private String[] ciphers = { "AES", "RSA", "TripleDES" };
@@ -183,6 +185,16 @@ public class PrimaryController {
 	}
 	
 	@FXML
+	void mouseHover(MouseEvent event) {
+		createPasswordbtn.setStyle("-fx-background-color: #f1bc31; -fx-text-fill: white;");
+	}
+	
+	@FXML
+	void mouseExit(MouseEvent event) {
+		createPasswordbtn.setStyle("-fx-backgorund-color: transparent; -fx-text-fill: #f1bc31; -fx-border-color: #f1bc31;");
+	}
+	
+	@FXML
 	void handlePressed(MouseEvent event) {
 		FileChooser fChooser = new FileChooser();
 		if (activeTab.equals("decrypted")) {
@@ -212,7 +224,8 @@ public class PrimaryController {
 	@FXML
 	void generatePassword(ActionEvent event) {
 		//Still in process		 
-		//tfPassword.setText("");
+		Xeger xeger = new Xeger(regex);
+		tfPassword.setText(xeger.generate());
 	 }
 	
 	@FXML
@@ -270,6 +283,8 @@ public class PrimaryController {
 				bis.read(data, 0, data.length);
 				
 				String cipher = CbCipher.getSelectionModel().getSelectedItem();
+				System.out.println("Pwd Valid: " + checkValidPassword(password));
+				System.out.println("Cipher:" + cipher);
 			
 				if (checkValidPassword(password)) {
 					switch (cipher) {
@@ -290,8 +305,7 @@ public class PrimaryController {
 				
 				String encryptedFileName = null;
 				
-				if (files.size() > 1) encryptedFileName = "cryptedZipFile.encrypted";
-				else encryptedFileName = files.get(0).getName() + ".encrypted";
+				encryptedFileName = files.size() > 1 ? "cryptedZipFile.encrypted" : files.get(0).getName() + ".encrypted";
 				
 				try (FileOutputStream foss = new FileOutputStream(dirFile + "\\" + encryptedFileName)) {
 					foss.write(encryptedFile);
@@ -318,7 +332,6 @@ public class PrimaryController {
 						break;
 					}
 				}
-				
 				try (FileOutputStream foss = new FileOutputStream(dirFile + "\\" + files.get(0).getName())) {
 					foss.write(decryptedFile);
 				}

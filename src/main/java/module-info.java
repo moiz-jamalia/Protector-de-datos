@@ -3,9 +3,9 @@ module kleinprojekt {
     requires javafx.fxml;
 	requires javafx.base;
 	requires javafx.graphics;
-	requires automaton;
 	requires org.apache.commons.codec;
 	requires java.base;
+	requires xeger;
 
     opens kleinprojekt to javafx.fxml;
     exports kleinprojekt;
