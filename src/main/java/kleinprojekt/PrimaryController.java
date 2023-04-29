@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -314,16 +313,16 @@ public class PrimaryController {
 				if (checkValidPassword(password)) {
 					switch (cipher) {
 					case "AES":
-						encryptedFile = AESEncrypt(data, password);
+						encryptedFile = aesEncryption(data, password);
 						break;
 					
 					case "RSA":
 						generateKey();
-						encryptedFile = RSAEncrypt(data);
+						encryptedFile = rsaEncryption(data);
 						break;
 					
 					case "TripleDES":
-						encryptedFile = TripleDESEncrypt(data, password);
+						encryptedFile = tripleDESEncryption(data, password);
 						break;
 					}
 				}
@@ -355,15 +354,15 @@ public class PrimaryController {
 				if (checkValidPassword(password)) {
 					switch (cipher) {
 					case "AES":
-						decryptedFile = AESDecrypt(data, password);
+						decryptedFile = aesDecryption(data, password);
 						break;
 					
 					case "RSA":
-						decryptedFile = RSADecrypt(data);
+						decryptedFile = rsaDecryption(data);
 						break;
 					
 					case "TripleDES":
-						decryptedFile = TripleDESDecrypt(data, password);
+						decryptedFile = tripleDESDecryption(data, password);
 						break;
 					}
 				}
@@ -435,7 +434,7 @@ public class PrimaryController {
 		publicKey = pair.getPublic();
 	}
 	
-	private byte[] AESEncrypt(byte[] data, String password) throws Exception {
+	private byte[] aesEncryption(byte[] data, String password) throws Exception {
 		setKey(password, "AES");
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
@@ -446,7 +445,7 @@ public class PrimaryController {
 		return encoder.encode(baos.toByteArray());
 	}
 	
-	private byte[] AESDecrypt(byte[] data, String password) throws Exception {
+	private byte[] aesDecryption(byte[] data, String password) throws Exception {
 		setKey(password, "AES");
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
@@ -454,7 +453,7 @@ public class PrimaryController {
 		return cipher.doFinal(decoder.decode(data));
 	}
 	
-	private byte[] RSAEncrypt(byte[] data) throws Exception {
+	private byte[] rsaEncryption(byte[] data) throws Exception {
 		cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING");
 		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
 		baos = new ByteArrayOutputStream();
@@ -469,14 +468,14 @@ public class PrimaryController {
 		return encoder.encode(baos.toByteArray());
 	}
 	
-	private byte[] RSADecrypt(byte[] data) throws Exception {
+	private byte[] rsaDecryption(byte[] data) throws Exception {
 		cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING");
 		cipher.init(Cipher.DECRYPT_MODE, privateKey);
 		Base64.Decoder decoder = Base64.getDecoder();
 		return cipher.doFinal(decoder.decode(data));
 	}
 	
-	private byte[] TripleDESEncrypt(byte[] data, String password) throws Exception {
+	private byte[] tripleDESEncryption(byte[] data, String password) throws Exception {
 		setKey(password, "TripleDES");
 		cipher = Cipher.getInstance("TripleDES/CBC/PKCS5PADDING");
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
@@ -487,7 +486,7 @@ public class PrimaryController {
 		return encoder.encode(baos.toByteArray());
 	}
 	
-	private byte[] TripleDESDecrypt(byte[] data, String password) throws Exception {
+	private byte[] tripleDESDecryption(byte[] data, String password) throws Exception {
 		setKey(password, "TripleDES");
 		cipher = Cipher.getInstance("TripleDES/CBC/PKCS5PADDING");
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
