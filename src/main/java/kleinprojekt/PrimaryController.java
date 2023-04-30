@@ -8,9 +8,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
@@ -51,7 +48,7 @@ public class PrimaryController {
 	private int chunkSize = 16;
 	private int offset = 0;
 	private ByteArrayOutputStream baos = null;
-	private String regex = new Regex().getRegex4();
+	private String regex = new Regex().getRegex0();
 	private Alert alert;
 	private List<File> files = new ArrayList<File>();
 	private String[] ciphers = { "AES", "RSA", "TripleDES" };
@@ -91,7 +88,7 @@ public class PrimaryController {
 	private Label FilesEncryptDecryptSurface;
     
 	@FXML
-    void initialize() throws Exception { 
+	void initialize() throws Exception {
 		encryptbtn.setStyle("-fx-background-color: #ffd866; -fx-font-weight: bold;");
 		encryptbtn.setUnderline(true);
 		activeTab = "encrypted";
@@ -106,6 +103,7 @@ public class PrimaryController {
 		CbCipher.getItems().addAll(ciphers);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		alert = new Alert(AlertType.NONE);
+		// still buggy
 		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
 				if (tfPassword.getText().isEmpty() || files.size() < 1 || CbCipher.getSelectionModel().isEmpty()) {
@@ -128,6 +126,8 @@ public class PrimaryController {
 		decryptbtn.setStyle("-fx-background-color: #ffd866; -fx-font-weight: bold;");
 		decryptbtn.setUnderline(true);
 		EnDecrypbtn.setText("Decrypt");
+		EnDecrypbtn.setVisible(true);
+		savebtn.setVisible(false);
 		FilesEncryptDecryptSurface.setText("File to decrypt");
 		tfPassword.setPrefWidth(200);
 		tfPassword.clear();
@@ -143,6 +143,8 @@ public class PrimaryController {
 		decryptbtn.setStyle("-fx-background-color: #fae580; -fx-font-weight: normal;");
 		decryptbtn.setUnderline(false);
 		EnDecrypbtn.setText("Encrypt");
+		EnDecrypbtn.setVisible(true);
+		savebtn.setVisible(false);
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
 		tfPassword.setPrefWidth(165);
 		tfPassword.clear();
@@ -243,8 +245,7 @@ public class PrimaryController {
 	}
 	
 	@FXML
-	void generatePassword(ActionEvent event) {
-		//Still in process		 
+	void generatePassword(ActionEvent event) {	 
 		tfPassword.setText(generateRandomPassword());
 		passwordInputChange();
 	 }
@@ -307,6 +308,7 @@ public class PrimaryController {
 				data = new byte[(int) zipFile.length()];
 				bis = new BufferedInputStream(fis);
 				bis.read(data, 0, data.length);
+				fis.close();
 				
 				String cipher = CbCipher.getSelectionModel().getSelectedItem();
 			
@@ -333,47 +335,56 @@ public class PrimaryController {
 					foss.write(encryptedFile);
 				}
 				
+				alert(AlertType.INFORMATION, "File encrypted successfully");
 				files = new ArrayList<File>();
 				
-				//debugging
-				zipFile.deleteOnExit();
-				if (zipFile.delete()) System.out.println("successful deleted");
-				else System.out.println("fuck u brad!");
+				zipFile.delete();
 				
 			} else if (activeTab.equals("decrypted")) {
-				String encFileName = files.get(0).getName().replace(".encrypted", "");
+				if (files.size() != 1) {
+					alert(AlertType.WARNING, "Please select a file to decrypt");
+					return;
+				}
 				
-				File newFile = new File(files.get(0).getParent(), encFileName);
+				String encFileName = files.get(0).getName();
+				if (!encFileName.endsWith(".encrypted")) {
+					alert(AlertType.WARNING, "Please select a valid encrypted file!");
+					return;
+				}
 				
-				Path path = Paths.get(newFile.getAbsolutePath());
-				
-				data = Files.readAllBytes(path);
-				
+				String decFileName = encFileName.substring(0, encFileName.length() - 10);
+				File decFile = new File(dirFile, decFileName);
+				if (decFile.exists()) {
+					alert(AlertType.WARNING, "File already exists! Please choose a different name.");
+					return;
+				}
+				fis = new FileInputStream(files.get(0));
+				byte[] encryptedData = fis.readAllBytes();
 				String cipher = CbCipher.getSelectionModel().getSelectedItem();
 				
 				if (checkValidPassword(password)) {
 					switch (cipher) {
 					case "AES":
-						decryptedFile = aesDecryption(data, password);
+						decryptedFile = aesDecryption(encryptedData, password);
 						break;
 					
 					case "RSA":
-						decryptedFile = rsaDecryption(data);
+						decryptedFile = rsaDecryption(encryptedData);
 						break;
 					
 					case "TripleDES":
-						decryptedFile = tripleDESDecryption(data, password);
+						decryptedFile = tripleDESDecryption(encryptedData, password);
 						break;
 					}
 				}
-				
-				File file = new File(dirFile + "\\" + encFileName);
-				fos = new FileOutputStream(file);
+				fos = new FileOutputStream(decFile);
 				fos.write(decryptedFile);
 				fos.close();
 				
-				unZipFile(file, zis, fos, dirFile);
+				//still in progress
+				//unzipFile(zipFile, zis, fos, decFile);
 				
+				alert(AlertType.INFORMATION, "File decrypted successfully");
 				files = new ArrayList<File>();
 			}
 			
@@ -399,23 +410,26 @@ public class PrimaryController {
 		}
 	}
 	
-	private void unZipFile(File file, ZipInputStream zis, FileOutputStream fos, File destDir) throws IOException {
-		byte[] buffer = new byte[1024];
-		zis = new ZipInputStream(new FileInputStream(file));
-		ZipEntry entry = zis.getNextEntry();
-		while (zis != null) {
-			File newFile = new File(destDir, entry.getName());
-			if (entry.isDirectory()) newFile.mkdir();
-			else {
-				fos = new FileOutputStream(newFile);
-				int length;
-				while ((length = zis.read(buffer)) > 0)	fos.write(buffer, 0, length);					
-				fos.close();
-			}
-			entry = zis.getNextEntry();
-		}
-		zis.closeEntry();
-		zis.close();
+	private void unzipFile(File zipFile, ZipInputStream zis, FileOutputStream fos, File outputFolder) throws IOException {
+	    zis = new ZipInputStream(new FileInputStream(zipFile));
+	    ZipEntry ze = zis.getNextEntry();
+	    byte[] buffer = new byte[1024];
+	    while (ze != null) {
+	        String fileName = ze.getName();
+	        File newFile = new File(outputFolder + File.separator + fileName);
+	        if (ze.isDirectory()) {
+	            newFile.mkdirs();
+	        } else {
+	            new File(newFile.getParent()).mkdirs();
+	            fos = new FileOutputStream(newFile);
+	            int len;
+	            while ((len = zis.read(buffer)) > 0) fos.write(buffer, 0, len);
+	            fos.close();
+	        }
+	        ze = zis.getNextEntry();
+	    }
+	    zis.closeEntry();
+	    zis.close();
 	}
 	
 	private void setKey(String myKey, String algorithm) throws Exception {
@@ -513,8 +527,7 @@ public class PrimaryController {
 	}
 	
 	private void passwordInputChange() {
-		String pwInput = tfPassword.getText();
-		EnDecrypbtn.setDisable(!checkValidPassword(pwInput));
+		EnDecrypbtn.setDisable(!checkValidPassword(tfPassword.getText()));
 	}
 	
 	private void enablePasswordInputs() {
