@@ -103,7 +103,7 @@ public class PrimaryController {
 		CbCipher.getItems().addAll(ciphers);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		alert = new Alert(AlertType.NONE);
-		// still buggy
+		// still buggy: idk what the problem here is
 		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
 				if (tfPassword.getText().isEmpty() || files.size() < 1 || CbCipher.getSelectionModel().isEmpty()) {
@@ -161,7 +161,7 @@ public class PrimaryController {
 	@FXML
 	void handleDrop(DragEvent event) {
 		if (activeTab.equals("encrypted")) {
-			files.addAll(event.getDragboard().getFiles());
+			files = event.getDragboard().getFiles();
 			if (files.isEmpty()) {
 				alert(AlertType.ERROR, "No Files fetched!");
 				return;
@@ -337,7 +337,6 @@ public class PrimaryController {
 				
 				alert(AlertType.INFORMATION, "File encrypted successfully");
 				files = new ArrayList<File>();
-				
 				zipFile.delete();
 				
 			} else if (activeTab.equals("decrypted")) {
@@ -361,7 +360,6 @@ public class PrimaryController {
 				fis = new FileInputStream(files.get(0));
 				byte[] encryptedData = fis.readAllBytes();
 				String cipher = CbCipher.getSelectionModel().getSelectedItem();
-				
 				if (checkValidPassword(password)) {
 					switch (cipher) {
 					case "AES":
@@ -381,8 +379,8 @@ public class PrimaryController {
 				fos.write(decryptedFile);
 				fos.close();
 				
-				//still in progress
-				//unzipFile(zipFile, zis, fos, decFile);
+				//still in progress: either the decryption or the Code itself is broken idk
+				unzipFile(zipFile, zis, fos, decFile);
 				
 				alert(AlertType.INFORMATION, "File decrypted successfully");
 				files = new ArrayList<File>();
