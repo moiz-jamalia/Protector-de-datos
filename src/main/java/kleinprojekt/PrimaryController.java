@@ -1,18 +1,13 @@
 package kleinprojekt;
 
 import java.io.BufferedInputStream;
-import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.KeyPair;
-import java.security.KeyPairGenerator;
 import java.security.MessageDigest;
-import java.security.PrivateKey;
-import java.security.PublicKey;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
@@ -48,16 +43,14 @@ public class PrimaryController {
 	private int chunkSize = 16;
 	private int offset = 0;
 	private ByteArrayOutputStream baos = null;
-	private String regex = new Regex().getRegex0();
+	private String regex = new Regex().getRegex4();
 	private Alert alert;
 	private List<File> files = new ArrayList<File>();
-	private String[] ciphers = { "AES", "RSA", "TripleDES" };
+	private String[] ciphers = { "AES", "Blowfish" };
 	private Cipher cipher = null;
 	private byte[] encryptedFile = null;
 	private byte[] decryptedFile = null;
 	private byte[] key;
-	private PrivateKey privateKey;
-	private PublicKey publicKey;
 	private SecretKeySpec secretKeySpec;
 	
 	@FXML
@@ -98,6 +91,7 @@ public class PrimaryController {
 		tfPassword.setDisable(true);
 		savebtn.setVisible(false);
 		EnDecrypbtn.setVisible(true);
+		EnDecrypbtn.setDisable(true);
 		EnDecrypbtn.getStyleClass().add("stripes");
 		tfPassword.getStyleClass().add("txt-pw");
 		CbCipher.getItems().addAll(ciphers);
@@ -107,11 +101,12 @@ public class PrimaryController {
 		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
 				if (tfPassword.getText().isEmpty() || files.size() < 1 || CbCipher.getSelectionModel().isEmpty()) {
-					EnDecrypbtn.getStyleClass().remove("stripes");
-					EnDecrypbtn.getStyleClass().add("btn-red");
-				} else {
-					EnDecrypbtn.getStyleClass().remove("btn-red");
 					EnDecrypbtn.getStyleClass().add("stripes");
+					EnDecrypbtn.getStyleClass().remove("btn-red");
+				} else {
+					passwordInputChange();
+					EnDecrypbtn.getStyleClass().add("btn-red");
+					EnDecrypbtn.getStyleClass().remove("stripes");
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -121,6 +116,7 @@ public class PrimaryController {
 	
 	@FXML
 	void decrypt(ActionEvent event) throws Exception {
+		disableAll();
 		encryptbtn.setStyle("-fx-background-color: #fae580; -fx-font-weight: normal;");
 		encryptbtn.setUnderline(false);
 		decryptbtn.setStyle("-fx-background-color: #ffd866; -fx-font-weight: bold;");
@@ -138,6 +134,7 @@ public class PrimaryController {
 
 	@FXML
 	void encrypt(ActionEvent event) throws Exception {
+		disableAll();
 		encryptbtn.setStyle("-fx-background-color: #ffd866; -fx-font-weight: bold;");
 		encryptbtn.setUnderline(true);
 		decryptbtn.setStyle("-fx-background-color: #fae580; -fx-font-weight: normal;");
@@ -257,6 +254,7 @@ public class PrimaryController {
 			savebtn.setVisible(false);	
 		}
 		else {
+			passwordInputChange();
 			EnDecrypbtn.setVisible(false);
 			savebtn.setVisible(true);
 		}
@@ -318,18 +316,13 @@ public class PrimaryController {
 						encryptedFile = aesEncryption(data, password);
 						break;
 					
-					case "RSA":
-						generateKey();
-						encryptedFile = rsaEncryption(data);
-						break;
-					
-					case "TripleDES":
-						encryptedFile = tripleDESEncryption(data, password);
+					case "Blowfish":
+						encryptedFile = blowfishEncryption(data, password);
 						break;
 					}
 				}
 				
-				String encryptedFileName = files.size() > 1 ? "cryptedZipFile.encrypted" : files.get(0).getName() + ".encrypted";
+				String encryptedFileName = files.size() > 1 ? "cryptedZipFile.zip.encrypted" : files.get(0).getName() + ".zip.encrypted";
 				
 				try (FileOutputStream foss = new FileOutputStream(dirFile + "\\" + encryptedFileName)) {
 					foss.write(encryptedFile);
@@ -366,12 +359,8 @@ public class PrimaryController {
 						decryptedFile = aesDecryption(encryptedData, password);
 						break;
 					
-					case "RSA":
-						decryptedFile = rsaDecryption(encryptedData);
-						break;
-					
-					case "TripleDES":
-						decryptedFile = tripleDESDecryption(encryptedData, password);
+					case "Blowfish":
+						decryptedFile = blowfishDecryption(encryptedData, password);
 						break;
 					}
 				}
@@ -379,8 +368,7 @@ public class PrimaryController {
 				fos.write(decryptedFile);
 				fos.close();
 				
-				//still in progress: either the decryption or the Code itself is broken idk
-				unzipFile(zipFile, zis, fos, decFile);
+				unzipFile(decFile, zis, dirFile);
 				
 				alert(AlertType.INFORMATION, "File decrypted successfully");
 				files = new ArrayList<File>();
@@ -408,7 +396,7 @@ public class PrimaryController {
 		}
 	}
 	
-	private void unzipFile(File zipFile, ZipInputStream zis, FileOutputStream fos, File outputFolder) throws IOException {
+	private void unzipFile(File zipFile, ZipInputStream zis, File outputFolder) throws IOException {
 	    zis = new ZipInputStream(new FileInputStream(zipFile));
 	    ZipEntry ze = zis.getNextEntry();
 	    byte[] buffer = new byte[1024];
@@ -419,15 +407,19 @@ public class PrimaryController {
 	            newFile.mkdirs();
 	        } else {
 	            new File(newFile.getParent()).mkdirs();
-	            fos = new FileOutputStream(newFile);
-	            int len;
-	            while ((len = zis.read(buffer)) > 0) fos.write(buffer, 0, len);
-	            fos.close();
+	            FileOutputStream fos = new FileOutputStream(newFile);
+	            try {
+	                int len;
+	                while ((len = zis.read(buffer)) > 0) fos.write(buffer, 0, len);
+	            } finally {
+	                fos.close();
+	            }
 	        }
 	        ze = zis.getNextEntry();
 	    }
 	    zis.closeEntry();
 	    zis.close();
+	    zipFile.delete();
 	}
 	
 	private void setKey(String myKey, String algorithm) throws Exception {
@@ -436,14 +428,6 @@ public class PrimaryController {
 		key = md.digest(key);
 		key = Arrays.copyOf(key, chunkSize);
 		secretKeySpec = new SecretKeySpec(key, algorithm);
-	}
-	
-	private void generateKey() throws Exception {
-		KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
-		generator.initialize(1024);
-		KeyPair pair = generator.generateKeyPair();
-		privateKey = pair.getPrivate();
-		publicKey = pair.getPublic();
 	}
 	
 	private byte[] aesEncryption(byte[] data, String password) throws Exception {
@@ -461,35 +445,16 @@ public class PrimaryController {
 		setKey(password, "AES");
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-		Base64.Decoder decoder = Base64.getDecoder();
-		return cipher.doFinal(decoder.decode(data));
-	}
-	
-	private byte[] rsaEncryption(byte[] data) throws Exception {
-		cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING");
-		cipher.init(Cipher.ENCRYPT_MODE, publicKey);
+		byte[] encryptedBytes = Base64.getDecoder().decode(data);
 		baos = new ByteArrayOutputStream();
-		ByteArrayInputStream bais = new ByteArrayInputStream(data);
-		byte[] chunk = new byte[117];
-		int length;
-		while ((length = bais.read(chunk)) != -1) {
-			byte[] encryptedChunk = cipher.doFinal(chunk, 0, length);
-			baos.write(encryptedChunk);
-		}
-		Base64.Encoder encoder = Base64.getEncoder();
-		return encoder.encode(baos.toByteArray());
+		createChunkBytes(encryptedBytes, baos, cipher);
+		offset = 0;
+		return baos.toByteArray();
 	}
-	
-	private byte[] rsaDecryption(byte[] data) throws Exception {
-		cipher = Cipher.getInstance("RSA/ECB/PKCS1PADDING");
-		cipher.init(Cipher.DECRYPT_MODE, privateKey);
-		Base64.Decoder decoder = Base64.getDecoder();
-		return cipher.doFinal(decoder.decode(data));
-	}
-	
-	private byte[] tripleDESEncryption(byte[] data, String password) throws Exception {
-		setKey(password, "TripleDES");
-		cipher = Cipher.getInstance("TripleDES/CBC/PKCS5PADDING");
+
+	private byte[] blowfishEncryption(byte[] data, String password) throws Exception {
+		setKey(password, "Blowfish");
+		cipher = Cipher.getInstance("Blowfish");
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
 		baos = new ByteArrayOutputStream();
 		createChunkBytes(data, baos, cipher);
@@ -498,20 +463,23 @@ public class PrimaryController {
 		return encoder.encode(baos.toByteArray());
 	}
 	
-	private byte[] tripleDESDecryption(byte[] data, String password) throws Exception {
-		setKey(password, "TripleDES");
-		cipher = Cipher.getInstance("TripleDES/CBC/PKCS5PADDING");
+	private byte[] blowfishDecryption(byte[] data, String password) throws Exception {
+		setKey(password, "Blowfish");
+		cipher = Cipher.getInstance("Blowfish");
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-		Base64.Decoder decoder = Base64.getDecoder();
-		return cipher.doFinal(decoder.decode(data));
+		byte[] decryptedBytes = Base64.getDecoder().decode(data);
+		baos = new ByteArrayOutputStream();
+		createChunkBytes(decryptedBytes, baos, cipher);
+		offset = 0;
+		return baos.toByteArray();
 	}
 	
 	private void createChunkBytes(byte[] data, ByteArrayOutputStream baos, Cipher cipher) throws Exception {
 		while (offset < data.length) {
 			int length = Math.min(chunkSize, data.length - offset);
 			byte[] chunk = Arrays.copyOfRange(data, offset, offset + length);
-			byte[] encryptedChunk = cipher.update(chunk);
-			baos.write(encryptedChunk);
+			byte[] cryptedChunk = cipher.update(chunk);
+			baos.write(cryptedChunk);
 			offset += length;
 		}
 		byte[] finalChunk = cipher.doFinal();
