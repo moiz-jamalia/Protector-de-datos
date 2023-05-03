@@ -86,16 +86,14 @@ public class PrimaryController {
     
 	@FXML
 	void initialize() throws Exception {
+		disableAll();
 		encryptbtn.setStyle("-fx-background-color: #ffd866; -fx-font-weight: bold;");
 		encryptbtn.setUnderline(true);
 		activeTab = "encrypted";
 		FilesEncryptDecryptSurface.setText("File/s to encrypt");
 		createPasswordbtn.setText("🔑");
-		createPasswordbtn.setDisable(true);
-		tfPassword.setDisable(true);
 		savebtn.setVisible(false);
 		EnDecrypbtn.setVisible(true);
-		EnDecrypbtn.setDisable(true);
 		EnDecrypbtn.getStyleClass().add("stripes");
 		tfPassword.getStyleClass().add("txt-pw");
 		cbCipher.getItems().addAll(ciphers);
@@ -109,7 +107,6 @@ public class PrimaryController {
 					EnDecrypbtn.getStyleClass().remove("btn-red");
 				} else {
 					passwordInputChange();
-					selectPasswordComplexity();
 					EnDecrypbtn.getStyleClass().add("btn-red");
 					EnDecrypbtn.getStyleClass().remove("stripes");
 				}
@@ -130,12 +127,12 @@ public class PrimaryController {
 		EnDecrypbtn.setVisible(true);
 		savebtn.setVisible(false);
 		FilesEncryptDecryptSurface.setText("File to decrypt");
+		FilesEncryptDecryptSurface.setDisable(false);
 		tfPassword.setPrefWidth(200);
 		tfPassword.clear();
 		createPasswordbtn.setVisible(false);
 		activeTab = "decrypted";
 		cbCipher.getSelectionModel().clearSelection();
-		cbPasswordComplex.getSelectionModel().clearSelection();
 		cbPasswordComplex.setVisible(false);
 	}
 
@@ -156,6 +153,7 @@ public class PrimaryController {
 		activeTab = "encrypted";
 		cbCipher.getSelectionModel().clearSelection();
 		cbPasswordComplex.setVisible(true);
+		cbPasswordComplex.setDisable(false);
 	}
 	
 	@FXML
@@ -244,7 +242,6 @@ public class PrimaryController {
 			}
 			else {
 				enablePasswordInputs();
-				selectPasswordComplexity();
 				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
 			}
 		}
@@ -253,13 +250,12 @@ public class PrimaryController {
 	@FXML
 	void generatePassword(ActionEvent event) {	 
 		tfPassword.setText(generateRandomPassword());
-		selectPasswordComplexity();
 		passwordInputChange();
 	 }
 	
 	@FXML
 	void crypt(MouseEvent event) {
-		if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty()) {
+		if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty() || cbPasswordComplex.getSelectionModel().isEmpty()) {
 			EnDecrypbtn.setVisible(true);
 			savebtn.setVisible(false);	
 		}
@@ -385,6 +381,26 @@ public class PrimaryController {
 			}
 		}
     }
+    
+    @FXML
+    private void chooseComplexityAction(ActionEvent event) {
+    	if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Easy")) regex = new Regex().getRegex1();
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) regex = new Regex().getRegex2();
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) regex = new Regex().getRegex3(); 
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) regex = new Regex().getRegex4();
+		else {
+			alert(AlertType.INFORMATION, "Please select a complexity for your Password");
+			return;
+		}
+    	if (activeTab.equals("encrypted")) {
+    		FilesEncryptDecryptSurface.setDisable(false);
+    		cbPasswordComplex.setDisable(true);
+		} else {
+			FilesEncryptDecryptSurface.setDisable(true);
+			cbPasswordComplex.setDisable(false);
+		}
+
+    }
 	
 	private void zipFile(File file, ZipOutputStream zos) throws IOException {
 		BufferedInputStream bis = null;
@@ -499,21 +515,10 @@ public class PrimaryController {
 		EnDecrypbtn.setDisable(true);
 		tfPassword.setDisable(true);
 		createPasswordbtn.setDisable(true);
-	}
-	
-	private void selectPasswordComplexity() {
-		if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Easy")) regex = new Regex().getRegex1();
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) regex = new Regex().getRegex2();
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) regex = new Regex().getRegex3(); 
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) regex = new Regex().getRegex4();
-		else {
-			alert(AlertType.INFORMATION, "Please select a complexity for your Password");
-			return;
-		}
+		FilesEncryptDecryptSurface.setDisable(true);
 	}
 	
 	private void passwordInputChange() {
-		selectPasswordComplexity();
 		EnDecrypbtn.setDisable(!checkValidPassword(tfPassword.getText()));
 	}
 	
@@ -527,17 +532,17 @@ public class PrimaryController {
 	}
 	
 	private String generateRandomPassword() {
-		String PASSWORD_CHARS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@$!%|*?&+-"; 
+		String passwordChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@$!%|*?&+-"; 
 		Random random = new Random();
 		
 		StringBuilder sb = new StringBuilder();
 		
-		sb.append(PASSWORD_CHARS.charAt(random.nextInt(52)));
-		sb.append(PASSWORD_CHARS.charAt(random.nextInt(10) + 52));
-		sb.append(PASSWORD_CHARS.charAt(random.nextInt(10) + 62));
+		sb.append(passwordChars.charAt(random.nextInt(52)));
+		sb.append(passwordChars.charAt(random.nextInt(10) + 52));
+		sb.append(passwordChars.charAt(random.nextInt(10) + 62));
 		
-		while (!Pattern.matches(regex, sb)) sb.append(PASSWORD_CHARS.charAt(random.nextInt(PASSWORD_CHARS.length())));
-		return sb.toString();
+		while (!Pattern.matches(regex, sb)) sb.append(passwordChars.charAt(random.nextInt(passwordChars.length())));
+		return sb.toString();	
 	}
 	
 	private void alert(AlertType alertType, String context) {

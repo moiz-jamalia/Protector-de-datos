@@ -26,13 +26,13 @@
                   <VBox alignment="CENTER" prefHeight="590.0" prefWidth="200.0">
                      <children>
                         <Label fx:id="FilesEncryptDecryptSurface" alignment="CENTER" contentDisplay="CENTER" onDragDropped="#handleDrop" onDragOver="#handleDragOver" onMouseEntered="#handleHover" onMouseExited="#handleExited" onMousePressed="#handlePressed" prefHeight="30.0" prefWidth="200.0" style="-fx-border-color: #f1bc31;" text="File/s to encrypt" textFill="#f1bc31" />
-                        <Pane prefHeight="29.0" prefWidth="200.0">
+                        <Pane prefHeight="30.0" prefWidth="200.0">
                            <children>
                               <TextField fx:id="tfPassword" prefHeight="30.0" prefWidth="165.0" promptText="Your Password..." style="-fx-background-color: transparent; -fx-border-color: white; -fx-text-fill: white;" />
                               <Button fx:id="createPasswordbtn" layoutX="165.0" onAction="#generatePassword" onMouseEntered="#mouseHover" onMouseExited="#mouseExit" prefHeight="30.0" prefWidth="35.0" style="-fx-background-color: transparent; -fx-border-color: #f1bc31;" textFill="#f1bc31" />
                            </children>
                         </Pane>
-                        <ComboBox fx:id="cbPasswordComplex" prefHeight="25.0" prefWidth="210.0" style="-fx-background-color: tranparent; -fx-border-color: #f1bc31; -fx-text-fill: #f1bc31;">
+                        <ComboBox fx:id="cbPasswordComplex" onAction="#chooseComplexityAction" prefHeight="25.0" prefWidth="210.0" style="-fx-background-color: tranparent; -fx-border-color: #f1bc31; -fx-text-fill: #f1bc31;">
                            <opaqueInsets>
                               <Insets top="10.0" />
                            </opaqueInsets>
