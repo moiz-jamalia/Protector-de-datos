@@ -14,8 +14,10 @@
 	-fx-text-fill: white;
 }
 
-.combo-box .cell:selected {
+#cbCipher .cell:selected {
 	-fx-text-fill: blue;
-	-fx-alignment: left;
 }
 
+#cbPasswordComplex .cell:selected {
+	-fx-text-fill: #f1bc31;
+}

@@ -32,6 +32,11 @@
                               <Button fx:id="createPasswordbtn" layoutX="165.0" onAction="#generatePassword" onMouseEntered="#mouseHover" onMouseExited="#mouseExit" prefHeight="30.0" prefWidth="35.0" style="-fx-background-color: transparent; -fx-border-color: #f1bc31;" textFill="#f1bc31" />
                            </children>
                         </Pane>
+                        <ComboBox fx:id="cbPasswordComplex" prefHeight="25.0" prefWidth="210.0" style="-fx-background-color: tranparent; -fx-border-color: #f1bc31; -fx-text-fill: #f1bc31;">
+                           <opaqueInsets>
+                              <Insets top="10.0" />
+                           </opaqueInsets>
+                        </ComboBox>
                      </children>
                   </VBox>
                   <VBox alignment="CENTER" prefHeight="590.0" prefWidth="225.0">
@@ -41,10 +46,10 @@
                               <Font name="System Bold" size="18.0" />
                            </font>
                         </Label>
-                        <ComboBox fx:id="CbCipher" prefHeight="25.0" prefWidth="115.0" style="-fx-background-color: tranparent; -fx-border-color: blue; -fx-alignment: LEFT;">
-                           <padding>
-                              <Insets left="50.0" />
-                           </padding>
+                        <ComboBox fx:id="cbCipher" prefHeight="25.0" prefWidth="115.0" style="-fx-background-color: tranparent; -fx-border-color: blue; -fx-text-fill: blue;">
+                           <opaqueInsets>
+                              <Insets top="10.0" />
+                           </opaqueInsets>
                         </ComboBox>
                      </children>
                      <opaqueInsets>

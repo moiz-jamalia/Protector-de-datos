@@ -43,10 +43,11 @@ public class PrimaryController {
 	private int chunkSize = 16;
 	private int offset = 0;
 	private ByteArrayOutputStream baos = null;
-	private String regex = new Regex().getRegex4();
+	private String regex = null;
 	private Alert alert;
 	private List<File> files = new ArrayList<File>();
 	private String[] ciphers = { "AES", "Blowfish" };
+	private String[] passwordComplexity = { "Easy", "Medium", "Immediate", "Hard" };
 	private Cipher cipher = null;
 	private byte[] encryptedFile = null;
 	private byte[] decryptedFile = null;
@@ -72,7 +73,10 @@ public class PrimaryController {
 	private Button createPasswordbtn;
 	
 	@FXML
-	private ComboBox<String> CbCipher;
+	private ComboBox<String> cbCipher;
+	
+	@FXML
+	private ComboBox<String> cbPasswordComplex;
 	
 	@FXML
 	private TextField tfPassword;
@@ -94,17 +98,18 @@ public class PrimaryController {
 		EnDecrypbtn.setDisable(true);
 		EnDecrypbtn.getStyleClass().add("stripes");
 		tfPassword.getStyleClass().add("txt-pw");
-		CbCipher.getItems().addAll(ciphers);
+		cbCipher.getItems().addAll(ciphers);
+		cbPasswordComplex.getItems().addAll(passwordComplexity);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		alert = new Alert(AlertType.NONE);
-		// still buggy: idk what the problem here is
-		CbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
+		cbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
-				if (tfPassword.getText().isEmpty() || files.size() < 1 || CbCipher.getSelectionModel().isEmpty()) {
+				if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty()) {
 					EnDecrypbtn.getStyleClass().add("stripes");
 					EnDecrypbtn.getStyleClass().remove("btn-red");
 				} else {
 					passwordInputChange();
+					selectPasswordComplexity();
 					EnDecrypbtn.getStyleClass().add("btn-red");
 					EnDecrypbtn.getStyleClass().remove("stripes");
 				}
@@ -129,7 +134,9 @@ public class PrimaryController {
 		tfPassword.clear();
 		createPasswordbtn.setVisible(false);
 		activeTab = "decrypted";
-		CbCipher.getSelectionModel().clearSelection();
+		cbCipher.getSelectionModel().clearSelection();
+		cbPasswordComplex.getSelectionModel().clearSelection();
+		cbPasswordComplex.setVisible(false);
 	}
 
 	@FXML
@@ -147,7 +154,8 @@ public class PrimaryController {
 		tfPassword.clear();
 		createPasswordbtn.setVisible(true);
 		activeTab = "encrypted";
-		CbCipher.getSelectionModel().clearSelection();
+		cbCipher.getSelectionModel().clearSelection();
+		cbPasswordComplex.setVisible(true);
 	}
 	
 	@FXML
@@ -236,6 +244,7 @@ public class PrimaryController {
 			}
 			else {
 				enablePasswordInputs();
+				selectPasswordComplexity();
 				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
 			}
 		}
@@ -244,12 +253,13 @@ public class PrimaryController {
 	@FXML
 	void generatePassword(ActionEvent event) {	 
 		tfPassword.setText(generateRandomPassword());
+		selectPasswordComplexity();
 		passwordInputChange();
 	 }
 	
 	@FXML
 	void crypt(MouseEvent event) {
-		if (tfPassword.getText().isEmpty() || files.size() < 1 || CbCipher.getSelectionModel().isEmpty()) {
+		if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty()) {
 			EnDecrypbtn.setVisible(true);
 			savebtn.setVisible(false);	
 		}
@@ -308,7 +318,7 @@ public class PrimaryController {
 				bis.read(data, 0, data.length);
 				fis.close();
 				
-				String cipher = CbCipher.getSelectionModel().getSelectedItem();
+				String cipher = cbCipher.getSelectionModel().getSelectedItem();
 			
 				if (checkValidPassword(password)) {
 					switch (cipher) {
@@ -352,7 +362,7 @@ public class PrimaryController {
 				}
 				fis = new FileInputStream(files.get(0));
 				byte[] encryptedData = fis.readAllBytes();
-				String cipher = CbCipher.getSelectionModel().getSelectedItem();
+				String cipher = cbCipher.getSelectionModel().getSelectedItem();
 				if (checkValidPassword(password)) {
 					switch (cipher) {
 					case "AES":
@@ -373,7 +383,6 @@ public class PrimaryController {
 				alert(AlertType.INFORMATION, "File decrypted successfully");
 				files = new ArrayList<File>();
 			}
-			
 		}
     }
 	
@@ -451,7 +460,7 @@ public class PrimaryController {
 		offset = 0;
 		return baos.toByteArray();
 	}
-
+	
 	private byte[] blowfishEncryption(byte[] data, String password) throws Exception {
 		setKey(password, "Blowfish");
 		cipher = Cipher.getInstance("Blowfish");
@@ -492,7 +501,19 @@ public class PrimaryController {
 		createPasswordbtn.setDisable(true);
 	}
 	
+	private void selectPasswordComplexity() {
+		if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Easy")) regex = new Regex().getRegex1();
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) regex = new Regex().getRegex2();
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) regex = new Regex().getRegex3(); 
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) regex = new Regex().getRegex4();
+		else {
+			alert(AlertType.INFORMATION, "Please select a complexity for your Password");
+			return;
+		}
+	}
+	
 	private void passwordInputChange() {
+		selectPasswordComplexity();
 		EnDecrypbtn.setDisable(!checkValidPassword(tfPassword.getText()));
 	}
 	
