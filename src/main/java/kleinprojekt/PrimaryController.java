@@ -48,6 +48,7 @@ public class PrimaryController {
 	private List<File> files = new ArrayList<File>();
 	private String[] ciphers = { "AES", "Blowfish" };
 	private String[] passwordComplexity = { "Easy", "Medium", "Immediate", "Hard" };
+	private String[] pwInfo = new String[4];
 	private Cipher cipher = null;
 	private byte[] encryptedFile = null;
 	private byte[] decryptedFile = null;
@@ -68,6 +69,9 @@ public class PrimaryController {
 	
 	@FXML
 	private Button decryptbtn;
+	
+	@FXML
+	private Button infobtn;
 	
 	@FXML
 	private Button createPasswordbtn;
@@ -96,10 +100,10 @@ public class PrimaryController {
 		EnDecrypbtn.setVisible(true);
 		EnDecrypbtn.getStyleClass().add("stripes");
 		tfPassword.getStyleClass().add("txt-pw");
-		cbCipher.getItems().addAll(ciphers);
 		cbPasswordComplex.getItems().addAll(passwordComplexity);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		alert = new Alert(AlertType.NONE);
+		cbCipher.getItems().addAll(ciphers);
 		cbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
 				if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty()) {
@@ -133,6 +137,7 @@ public class PrimaryController {
 		createPasswordbtn.setVisible(false);
 		activeTab = "decrypted";
 		cbCipher.getSelectionModel().clearSelection();
+		infobtn.setVisible(false);
 		cbPasswordComplex.setVisible(false);
 	}
 
@@ -152,8 +157,15 @@ public class PrimaryController {
 		createPasswordbtn.setVisible(true);
 		activeTab = "encrypted";
 		cbCipher.getSelectionModel().clearSelection();
+		infobtn.setVisible(true);
 		cbPasswordComplex.setVisible(true);
 		cbPasswordComplex.setDisable(false);
+	}
+	
+	@FXML
+	void pwInfo(ActionEvent event) throws Exception {
+		if (pwInfo != null) alert(AlertType.INFORMATION, "INFORMATION", pwInfo[0], pwInfo[1]);
+		else alert(AlertType.INFORMATION, "INFORMATION" , "No Complexity selected", "Please select a complexity for your password");
 	}
 	
 	@FXML
@@ -166,7 +178,7 @@ public class PrimaryController {
 		if (activeTab.equals("encrypted")) {
 			files = event.getDragboard().getFiles();
 			if (files.isEmpty()) {
-				alert(AlertType.ERROR, "No Files fetched!");
+				alert(AlertType.ERROR, "ERROR", "No Files", "No Files fetched!");
 				return;
 			}
 			else {
@@ -176,16 +188,16 @@ public class PrimaryController {
 		} else if (activeTab.equals("decrypted")){
 			files = event.getDragboard().getFiles();
 			if (files.isEmpty()) {
-				alert(AlertType.ERROR, "No File fetched!");
+				alert(AlertType.ERROR, "ERROR", "No Files", "No File fetched!");
 				return;
 			} else if (files.get(0).getName().indexOf(".encrypted") == -1) {
-				alert(AlertType.WARNING, "Please select an encrypted File");
+				alert(AlertType.WARNING, "WARNING", "Wrong File selected", "Please select an encrypted File");
 				return;
 			} else if (files.get(0).length() > maxFileSize) {
-				alert(AlertType.WARNING, "Large file sizes might crash the application \nPlease select smaller files.");
+				alert(AlertType.WARNING, "WARNING", "File is too big", "Large file sizes might crash the application \nPlease select smaller files.");
 				return;
 			} else if (files.size() != 1) {
-				alert(AlertType.WARNING, "Please select one File to decrypt!");
+				alert(AlertType.WARNING, "WARNING", "no File selected", "Please select one File to decrypt!");
 				return;
 			} else {
 				enablePasswordInputs();
@@ -222,13 +234,13 @@ public class PrimaryController {
 			fChooser.getExtensionFilters().add(extFilter);
 			files = fChooser.showOpenMultipleDialog(null);
 			if (files.isEmpty()) {
-				alert(AlertType.ERROR, "No File fetched!");
+				alert(AlertType.ERROR, "ERROR", "No Files", "No File fetched!");
 				return;
 			} else if (files.size() != 1) {
-				alert(AlertType.WARNING, "Please select one File to decrypt!");
+				alert(AlertType.WARNING, "WARNING", "No File selected", "Please select one File to decrypt!");
 				return;
 			} else if (files.get(0).length() > maxFileSize) {
-				alert(AlertType.WARNING, "Large file sizes might crash the application \nPlease select smaller files.");
+				alert(AlertType.WARNING, "WARNING", "File is too big", "Large file sizes might crash the application \nPlease select smaller files.");
 				return;
 			} else {
 				enablePasswordInputs();
@@ -237,7 +249,7 @@ public class PrimaryController {
 		} else if (activeTab.equals("encrypted")) {
 			files = fChooser.showOpenMultipleDialog(null);
 			if (files.isEmpty()) {
-				alert(AlertType.ERROR, "No File fetched!");
+				alert(AlertType.ERROR, "ERROR", "No Files", "No File fetched!");
 				return;
 			}
 			else {
@@ -280,17 +292,17 @@ public class PrimaryController {
 		DirectoryChooser dirChooser = new DirectoryChooser();
 		if (files == null) {
 			if (activeTab.equals("encrypted")) {
-				alert(AlertType.WARNING, "Please select a file to encrypt!");
+				alert(AlertType.WARNING,"WARNING", "No File selected", "Please select a file to encrypt!");
 				return;
 			} else if (activeTab.equals("decrypted")) {
-				alert(AlertType.WARNING, "Please select a file to decrypt!");
+				alert(AlertType.WARNING, "WARNING", "No File selected", "Please select a file to decrypt!");
 				return;
 			}
 		} else if (password.isEmpty()) {
-			alert(AlertType.WARNING, "Please enter a Password");
+			alert(AlertType.WARNING,"WARNING", "Password field is Empty", "Please enter a Password");
 			return;
 		} else if (!checkValidPassword(password)) {
-			alert(AlertType.WARNING, "Password invalid please enter a Password");
+			alert(AlertType.WARNING, "WARNING", "Invalid Password", "Password invalid please enter a Password");
 			return;
 		} else {
 			File dirFile = dirChooser.showDialog(null);
@@ -334,26 +346,26 @@ public class PrimaryController {
 					foss.write(encryptedFile);
 				}
 				
-				alert(AlertType.INFORMATION, "File encrypted successfully");
+				alert(AlertType.CONFIRMATION, "CONFIRMATION", "Encryption succeed", "File encrypted successfully");
 				files = new ArrayList<File>();
 				zipFile.delete();
 				
 			} else if (activeTab.equals("decrypted")) {
 				if (files.size() != 1) {
-					alert(AlertType.WARNING, "Please select a file to decrypt");
+					alert(AlertType.WARNING, "WARNING", "wrong File", "Please select a file to decrypt");
 					return;
 				}
 				
 				String encFileName = files.get(0).getName();
 				if (!encFileName.endsWith(".encrypted")) {
-					alert(AlertType.WARNING, "Please select a valid encrypted file!");
+					alert(AlertType.WARNING,"WARNING", "wrong File", "Please select a valid encrypted file!");
 					return;
 				}
 				
 				String decFileName = encFileName.substring(0, encFileName.length() - 10);
 				File decFile = new File(dirFile, decFileName);
 				if (decFile.exists()) {
-					alert(AlertType.WARNING, "File already exists! Please choose a different name.");
+					alert(AlertType.WARNING, "WARNING", "exact File", "File already exists! Please choose a different name.");
 					return;
 				}
 				fis = new FileInputStream(files.get(0));
@@ -376,7 +388,7 @@ public class PrimaryController {
 				
 				unzipFile(decFile, zis, dirFile);
 				
-				alert(AlertType.INFORMATION, "File decrypted successfully");
+				alert(AlertType.CONFIRMATION, "CONFIRMATION", "decryption succeed", "File decrypted successfully");
 				files = new ArrayList<File>();
 			}
 		}
@@ -384,14 +396,31 @@ public class PrimaryController {
     
     @FXML
     private void chooseComplexityAction(ActionEvent event) {
-    	if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Easy")) regex = new Regex().getRegex1();
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) regex = new Regex().getRegex2();
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) regex = new Regex().getRegex3(); 
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) regex = new Regex().getRegex4();
+    	if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Easy")) {
+    		regex = new Regex().getRegex1();
+    		pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
+    		pwInfo[1] = "Minimum eight characters\nat least one letter\none number and one special character";
+    	}
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) {
+			regex = new Regex().getRegex2();
+			pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
+			pwInfo[1] = "Minimum eight characters\nat least one uppercase letter\none lowercase letter\none number and one special character";
+		}
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) {
+			regex = new Regex().getRegex3(); 
+			pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
+			pwInfo[1] = "Minimum twelve characters\nat least one uppercase letter\none lowercase letter\none number and one special character";
+		}
+		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) {
+			regex = new Regex().getRegex4();
+			pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
+			pwInfo[1] = "Minimum 16 characters\nat least one uppercase letter\none lowercase letter\none number and one special character";
+		}
 		else {
-			alert(AlertType.INFORMATION, "Please select a complexity for your Password");
+			pwInfo = null;
 			return;
 		}
+    	
     	if (activeTab.equals("encrypted")) {
     		FilesEncryptDecryptSurface.setDisable(false);
     		cbPasswordComplex.setDisable(true);
@@ -545,8 +574,10 @@ public class PrimaryController {
 		return sb.toString();	
 	}
 	
-	private void alert(AlertType alertType, String context) {
+	private void alert(AlertType alertType, String title, String headerTitle, String context) {
 		alert.setAlertType(alertType);
+		alert.setTitle(title);
+		alert.setHeaderText(headerTitle);
 		alert.setContentText(context);
 		alert.show();
 	}

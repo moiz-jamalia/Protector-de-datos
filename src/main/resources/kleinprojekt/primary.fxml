@@ -19,6 +19,7 @@
                <children>
                   <Button fx:id="encryptbtn" layoutX="300.0" layoutY="-1.0" onAction="#encrypt" prefHeight="60.0" prefWidth="100.0" style="-fx-background-color: fae580;" text="Encryption" />
                   <Button fx:id="decryptbtn" layoutX="400.0" layoutY="-1.0" onAction="#decrypt" prefHeight="60.0" prefWidth="100.0" style="-fx-background-color: fae580;" text="Decryption" />
+                  <Button fx:id="infobtn" layoutX="735.0" layoutY="-1.0" onAction="#pwInfo" prefHeight="60.0" prefWidth="65.0" style="-fx-background-color: fae580;" text="Info" />
                </children>
             </Pane>
             <HBox alignment="CENTER_LEFT" prefHeight="590.0" prefWidth="800.0" spacing="50.0" VBox.vgrow="ALWAYS">
@@ -32,7 +33,7 @@
                               <Button fx:id="createPasswordbtn" layoutX="165.0" onAction="#generatePassword" onMouseEntered="#mouseHover" onMouseExited="#mouseExit" prefHeight="30.0" prefWidth="35.0" style="-fx-background-color: transparent; -fx-border-color: #f1bc31;" textFill="#f1bc31" />
                            </children>
                         </Pane>
-                        <ComboBox fx:id="cbPasswordComplex" onAction="#chooseComplexityAction" prefHeight="25.0" prefWidth="210.0" style="-fx-background-color: tranparent; -fx-border-color: #f1bc31; -fx-text-fill: #f1bc31;">
+                        <ComboBox fx:id="cbPasswordComplex" onAction="#chooseComplexityAction" prefHeight="28.0" prefWidth="200.0" style="-fx-background-color: tranparent; -fx-border-color: #f1bc31; -fx-text-fill: #f1bc31;">
                            <opaqueInsets>
                               <Insets top="10.0" />
                            </opaqueInsets>
