@@ -108,7 +108,6 @@ public class PrimaryController {
 		alert = new Alert(AlertType.NONE);
 		prefs = Preferences.userRoot().node(getClass().getName());
 		regex = prefs.get(regex_key, new Regex().getRegex1());
-		System.out.println("Regex: " + regex); // debugging
 		cbCipher.getItems().addAll(ciphers);
 		cbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
