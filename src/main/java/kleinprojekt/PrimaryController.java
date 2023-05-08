@@ -390,8 +390,6 @@ public class PrimaryController {
 				fos.write(decryptedFile);
 				fos.close();
 				
-				System.out.println(decFile); //debugging
-				
 				unzipFile(decFile, zis, dirFile);
 				
 				alert(AlertType.INFORMATION, "Information", "decryption succeed", "File decrypted successfully");
