@@ -5,6 +5,7 @@ module kleinprojekt {
 	requires javafx.graphics;
 	requires org.apache.commons.codec;
 	requires java.base;
+	requires java.prefs;
 
     opens kleinprojekt to javafx.fxml;
     exports kleinprojekt;

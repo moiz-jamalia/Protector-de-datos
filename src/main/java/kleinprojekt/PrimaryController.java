@@ -13,14 +13,13 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 import java.util.Random;
+import java.util.prefs.Preferences;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
-
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
-
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
@@ -39,6 +38,8 @@ import javafx.stage.FileChooser;
 public class PrimaryController {
 
 	private String activeTab = "encrypt";
+	private final String aesAlgorithm = "AES/ECB/PKCS5PADDING";
+	private final String blowfishAlgorithm = "Blowfish";
 	private int maxFileSize = 2 * (1024 * 1024);
 	private int chunkSize = 16;
 	private int offset = 0;
@@ -54,6 +55,8 @@ public class PrimaryController {
 	private byte[] decryptedFile = null;
 	private byte[] key;
 	private SecretKeySpec secretKeySpec;
+	private final String regex_key = new Regex().getRegex1();
+	private Preferences prefs;
 	
 	@FXML
 	private AnchorPane MainPane;
@@ -103,6 +106,9 @@ public class PrimaryController {
 		cbPasswordComplex.getItems().addAll(passwordComplexity);
 		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
 		alert = new Alert(AlertType.NONE);
+		prefs = Preferences.userRoot().node(getClass().getName());
+		regex = prefs.get(regex_key, new Regex().getRegex1());
+		System.out.println("Regex: " + regex); // debugging
 		cbCipher.getItems().addAll(ciphers);
 		cbCipher.getSelectionModel().selectedIndexProperty().addListener((args, oldVal, newVal) -> {
 			try {
@@ -180,8 +186,7 @@ public class PrimaryController {
 			if (files.isEmpty()) {
 				alert(AlertType.ERROR, "ERROR", "No Files", "No Files fetched!");
 				return;
-			}
-			else {
+			} else {
 				enablePasswordInputs();
 				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
 			}
@@ -251,8 +256,7 @@ public class PrimaryController {
 			if (files.isEmpty()) {
 				alert(AlertType.ERROR, "ERROR", "No Files", "No File fetched!");
 				return;
-			}
-			else {
+			} else {
 				enablePasswordInputs();
 				FilesEncryptDecryptSurface.setText("File/s to encrypt ✅");
 			}
@@ -270,8 +274,7 @@ public class PrimaryController {
 		if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty() || cbPasswordComplex.getSelectionModel().isEmpty()) {
 			EnDecrypbtn.setVisible(true);
 			savebtn.setVisible(false);	
-		}
-		else {
+		} else {
 			passwordInputChange();
 			EnDecrypbtn.setVisible(false);
 			savebtn.setVisible(true);
@@ -346,10 +349,12 @@ public class PrimaryController {
 					foss.write(encryptedFile);
 				}
 				
-				alert(AlertType.CONFIRMATION, "CONFIRMATION", "Encryption succeed", "File encrypted successfully");
+				alert(AlertType.INFORMATION, "Information", "Encryption succeed", "File encrypted successfully");
 				files = new ArrayList<File>();
 				zipFile.delete();
 				
+				resetInputs();
+								
 			} else if (activeTab.equals("decrypted")) {
 				if (files.size() != 1) {
 					alert(AlertType.WARNING, "WARNING", "wrong File", "Please select a file to decrypt");
@@ -386,37 +391,41 @@ public class PrimaryController {
 				fos.write(decryptedFile);
 				fos.close();
 				
+				System.out.println(decFile); //debugging
+				
 				unzipFile(decFile, zis, dirFile);
 				
-				alert(AlertType.CONFIRMATION, "CONFIRMATION", "decryption succeed", "File decrypted successfully");
+				alert(AlertType.INFORMATION, "Information", "decryption succeed", "File decrypted successfully");
 				files = new ArrayList<File>();
+				
+				resetInputs();
 			}
 		}
     }
     
     @FXML
-    private void chooseComplexityAction(ActionEvent event) {
+    void chooseComplexityAction(ActionEvent event) {
     	if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Easy")) {
     		regex = new Regex().getRegex1();
+    		prefs.put(regex_key, regex);
     		pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
     		pwInfo[1] = "Minimum eight characters\nat least one letter\none number and one special character";
-    	}
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) {
+    	} else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Medium")) {
 			regex = new Regex().getRegex2();
+			prefs.put(regex_key, regex);
 			pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
 			pwInfo[1] = "Minimum eight characters\nat least one uppercase letter\none lowercase letter\none number and one special character";
-		}
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) {
-			regex = new Regex().getRegex3(); 
+		} else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Immediate")) {
+			regex = new Regex().getRegex3();
+			prefs.put(regex_key, regex);
 			pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
 			pwInfo[1] = "Minimum twelve characters\nat least one uppercase letter\none lowercase letter\none number and one special character";
-		}
-		else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) {
+		} else if (cbPasswordComplex.getSelectionModel().getSelectedItem().equals("Hard")) {
 			regex = new Regex().getRegex4();
+			prefs.put(regex_key, regex);
 			pwInfo[0] = cbPasswordComplex.getSelectionModel().getSelectedItem();
 			pwInfo[1] = "Minimum 16 characters\nat least one uppercase letter\none lowercase letter\none number and one special character";
-		}
-		else {
+		} else {
 			pwInfo = null;
 			return;
 		}
@@ -428,7 +437,6 @@ public class PrimaryController {
 			FilesEncryptDecryptSurface.setDisable(true);
 			cbPasswordComplex.setDisable(false);
 		}
-
     }
 	
 	private void zipFile(File file, ZipOutputStream zos) throws IOException {
@@ -450,10 +458,15 @@ public class PrimaryController {
 		}
 	}
 	
+	@SuppressWarnings("resource")
 	private void unzipFile(File zipFile, ZipInputStream zis, File outputFolder) throws IOException {
 	    zis = new ZipInputStream(new FileInputStream(zipFile));
 	    ZipEntry ze = zis.getNextEntry();
 	    byte[] buffer = new byte[1024];
+	    if (ze == null) {
+	    	alert(AlertType.ERROR, "Error", "wrong Password or wrong decryption", "either the Password or the Decryption algorithm is Incorrect!");
+	    	return;
+		}
 	    while (ze != null) {
 	        String fileName = ze.getName();
 	        File newFile = new File(outputFolder + File.separator + fileName);
@@ -486,7 +499,7 @@ public class PrimaryController {
 	
 	private byte[] aesEncryption(byte[] data, String password) throws Exception {
 		setKey(password, "AES");
-		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+		cipher = Cipher.getInstance(aesAlgorithm);
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
 		baos = new ByteArrayOutputStream();
 		createChunkBytes(data, baos, cipher);
@@ -497,7 +510,7 @@ public class PrimaryController {
 	
 	private byte[] aesDecryption(byte[] data, String password) throws Exception {
 		setKey(password, "AES");
-		cipher = Cipher.getInstance("AES/ECB/PKCS5PADDING");
+		cipher = Cipher.getInstance(aesAlgorithm);
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
 		byte[] encryptedBytes = Base64.getDecoder().decode(data);
 		baos = new ByteArrayOutputStream();
@@ -507,8 +520,8 @@ public class PrimaryController {
 	}
 	
 	private byte[] blowfishEncryption(byte[] data, String password) throws Exception {
-		setKey(password, "Blowfish");
-		cipher = Cipher.getInstance("Blowfish");
+		setKey(password, blowfishAlgorithm);
+		cipher = Cipher.getInstance(blowfishAlgorithm);
 		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
 		baos = new ByteArrayOutputStream();
 		createChunkBytes(data, baos, cipher);
@@ -518,8 +531,8 @@ public class PrimaryController {
 	}
 	
 	private byte[] blowfishDecryption(byte[] data, String password) throws Exception {
-		setKey(password, "Blowfish");
-		cipher = Cipher.getInstance("Blowfish");
+		setKey(password, blowfishAlgorithm);
+		cipher = Cipher.getInstance(blowfishAlgorithm);
 		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
 		byte[] decryptedBytes = Base64.getDecoder().decode(data);
 		baos = new ByteArrayOutputStream();
@@ -536,7 +549,15 @@ public class PrimaryController {
 			baos.write(cryptedChunk);
 			offset += length;
 		}
-		byte[] finalChunk = cipher.doFinal();
+		
+		byte[] finalChunk = null;
+		try {
+			finalChunk = cipher.doFinal();	
+		} catch (Exception e) {
+			alert(AlertType.ERROR, "wrong Password", "Password is Wrong", "Your Password is invalid");
+			return;
+		}
+		
 		baos.write(finalChunk);
 	}
 	
@@ -554,6 +575,24 @@ public class PrimaryController {
 	private void enablePasswordInputs() {
 		tfPassword.setDisable(false);
 		createPasswordbtn.setDisable(false);
+	}
+	
+	private void resetInputs() {
+		EnDecrypbtn.setVisible(true);
+		savebtn.setVisible(false);
+		EnDecrypbtn.setDisable(true);
+		tfPassword.clear();
+		cbCipher.getSelectionModel().clearSelection();
+		if (activeTab.equals("encrypted")) {
+			cbPasswordComplex.setDisable(false);
+			cbPasswordComplex.getSelectionModel().clearSelection();
+			FilesEncryptDecryptSurface.setText("File/s to encrypt");
+			files = new ArrayList<File>();
+		} else {
+			FilesEncryptDecryptSurface.setText("File/s to decrypt");
+			files = new ArrayList<File>();
+			cbPasswordComplex.setDisable(true);
+		}
 	}
 
 	private boolean checkValidPassword(String pw) {
