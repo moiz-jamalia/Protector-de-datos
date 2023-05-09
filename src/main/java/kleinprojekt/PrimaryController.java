@@ -270,7 +270,7 @@ public class PrimaryController {
 	
 	@FXML
 	void crypt(MouseEvent event) {
-		if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty() || cbPasswordComplex.getSelectionModel().isEmpty()) {
+		if (tfPassword.getText().isEmpty() || files.size() < 1 || cbCipher.getSelectionModel().isEmpty()) {
 			EnDecrypbtn.setVisible(true);
 			savebtn.setVisible(false);	
 		} else {
@@ -386,6 +386,7 @@ public class PrimaryController {
 						break;
 					}
 				}
+				
 				fos = new FileOutputStream(decFile);
 				fos.write(decryptedFile);
 				fos.close();
@@ -455,15 +456,10 @@ public class PrimaryController {
 		}
 	}
 	
-	@SuppressWarnings("resource")
 	private void unzipFile(File zipFile, ZipInputStream zis, File outputFolder) throws IOException {
 	    zis = new ZipInputStream(new FileInputStream(zipFile));
 	    ZipEntry ze = zis.getNextEntry();
 	    byte[] buffer = new byte[1024];
-	    if (ze == null) {
-	    	alert(AlertType.ERROR, "Error", "wrong Password or wrong decryption", "either the Password or the Decryption algorithm is Incorrect!");
-	    	return;
-		}
 	    while (ze != null) {
 	        String fileName = ze.getName();
 	        File newFile = new File(outputFolder + File.separator + fileName);
@@ -577,7 +573,6 @@ public class PrimaryController {
 	private void resetInputs() {
 		EnDecrypbtn.setVisible(true);
 		savebtn.setVisible(false);
-		EnDecrypbtn.setDisable(true);
 		tfPassword.clear();
 		cbCipher.getSelectionModel().clearSelection();
 		if (activeTab.equals("encrypted")) {
@@ -593,7 +588,7 @@ public class PrimaryController {
 	}
 
 	private boolean checkValidPassword(String pw) {
-		return (!pw.isEmpty() && pw.matches(regex));
+		return (!pw.isEmpty() && pw.matches(regex_key));
 	}
 	
 	private String generateRandomPassword() {
@@ -606,7 +601,7 @@ public class PrimaryController {
 		sb.append(passwordChars.charAt(random.nextInt(10) + 52));
 		sb.append(passwordChars.charAt(random.nextInt(10) + 62));
 		
-		while (!Pattern.matches(regex, sb)) sb.append(passwordChars.charAt(random.nextInt(passwordChars.length())));
+		while (!Pattern.matches(regex_key, sb)) sb.append(passwordChars.charAt(random.nextInt(passwordChars.length())));
 		return sb.toString();	
 	}
 	
