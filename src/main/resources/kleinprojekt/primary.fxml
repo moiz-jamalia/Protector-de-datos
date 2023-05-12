@@ -40,7 +40,7 @@
                         </ComboBox>
                      </children>
                   </VBox>
-                  <VBox alignment="CENTER" prefHeight="590.0" prefWidth="225.0">
+                  <VBox alignment="CENTER" prefHeight="590.0" prefWidth="224.0">
                      <children>
                         <Label alignment="CENTER" prefHeight="40.0" prefWidth="70.0" text="Cipher" textFill="#2200ff">
                            <font>
@@ -57,7 +57,7 @@
                         <Insets bottom="50.0" />
                      </opaqueInsets>
                   </VBox>
-                  <Pane prefHeight="200.0" prefWidth="200.0">
+                  <Pane prefHeight="590.0" prefWidth="225.0">
                      <children>
                         <Button fx:id="EnDecrypbtn" alignment="CENTER_RIGHT" contentDisplay="TOP" graphicTextGap="8.0" layoutY="275.0" onMouseClicked="#crypt" prefHeight="45.0" prefWidth="95.0" style="-fx-border-color: red;" text="Encrypt" textFill="RED">
                            <padding>
