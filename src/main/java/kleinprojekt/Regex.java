@@ -22,6 +22,4 @@ public class Regex {
 	public String getRegex4() {
 		return regex4;
 	}
-	
-	
 }
